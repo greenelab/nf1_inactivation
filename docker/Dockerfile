@@ -1,8 +1,8 @@
-FROM continuumio/anaconda3:latest
+FROM continuumio/anaconda3:4.1.1
 MAINTAINER "Greg Way" <gregway@mail.med.upenn.edu>
 
 # Install base packages
-RUN apt-get update --fix-missing && apt-get install \
+RUN apt-get update --fix-missing && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
     libssh2-1-dev \
@@ -11,19 +11,22 @@ RUN apt-get update --fix-missing && apt-get install \
 ###########################
 # Clone nf1_inactivation Repo
 ###########################
-RUN hg clone https://gwaygenomics@bitbucket.org/gwaygenomics/nf1_inactivation
+ARG CACHEBUST=1
+RUN git clone https://github.com/greenelab/nf1_inactivation.git
 
 ###########################
 # Install R and Packages
 ###########################
-RUN apt-get update --fix-missing && apt-get install \
+RUN apt-get update --fix-missing && apt-get install -y \
     r-base \
     r-base-dev \
     r-cran-rcpp
 
 RUN echo "deb http://cran.irsn.fr/bin/linux/debian jessie-cran3/" >> /etc/apt/sources.list
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key 381BA480
-RUN apt-get update && apt-get install r-base
+RUN apt-get update && apt-get install -y r-base
+
+RUN mkdir /root/.checkpoint
 
 RUN Rscript nf1_inactivation/INSTALL.R
 

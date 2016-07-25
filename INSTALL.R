@@ -5,28 +5,14 @@
 # Usage:
 # Run by the Docker build to reproduce compute environment
 
+mirror <- "http://cran.us.r-project.org"
+install.packages("checkpoint", repos = mirror)
+library("checkpoint")
+
 #####################
 # Install CRAN packages
 #####################
-mirror <- "http://cran.us.r-project.org"
-
-cran_pkgs <- c(
-  'Rcpp',
-  'readr',
-  'codetools',
-  'curl',
-  'httr',
-  'git2r',
-  'plyr',
-  'dplyr',
-  'readr',
-  'Rmisc',
-  'calibrate',
-  'data.table',
-  'devtools'
-)
-
-install.packages(cran_pkgs, repos = mirror)
+checkpoint("2016-07-25")
 
 ######################
 # Install bioconductor packages
