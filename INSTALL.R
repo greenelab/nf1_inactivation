@@ -4,7 +4,7 @@
 #
 # Usage:
 # Run by the Docker build to reproduce compute environment
-
+library('methods')
 mirror <- "http://cran.us.r-project.org"
 install.packages("checkpoint", repos = mirror)
 library("checkpoint")
