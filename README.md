@@ -1,7 +1,7 @@
 ############################################
 # NF1 Inactivation Classifier for Glioblastoma
 #
-# (C) 2016 Gregory Way
+## (C) 2016 Gregory Way
 ############################################
 
 ###################
