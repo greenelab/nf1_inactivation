@@ -11,13 +11,13 @@ RUN apt-get update --fix-missing && apt-get install -y \
 ###########################
 # Clone nf1_inactivation Repo
 ###########################
-ARG CACHEBUST=1
+# ARG CACHEBUST=1
 RUN git clone https://github.com/greenelab/nf1_inactivation.git
 
 ###########################
-# Install R and Packages
+# Install R
 ###########################
-RUN apt-get update --fix-missing && apt-get install -y \
+RUN apt-get install -y \
     r-base \
     r-base-dev \
     r-cran-rcpp
@@ -27,6 +27,3 @@ RUN apt-key adv --keyserver keys.gnupg.net --recv-key 381BA480
 RUN apt-get update && apt-get install -y r-base
 
 RUN mkdir /root/.checkpoint
-
-RUN Rscript nf1_inactivation/INSTALL.R
-

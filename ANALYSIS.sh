@@ -6,8 +6,10 @@
 ##################
 
 ##################
-# Step 0 - Download Data
+# Step 0 - Install R Packages and Download Data
 ##################
+Rscript INSTALL.R
+
 ./download_data.sh
 
 ##################
@@ -33,7 +35,7 @@ python scripts/build_y.py \
 --tissue 'GBM' \
 --y-origin 'data/Y/' \
 --filter 'Silent' \
---unclassified
+--unclass
 
 ##################
 # Step 2 - Cross Validation
@@ -60,7 +62,7 @@ python scripts/nf1_classifier.py \
 optimal_alpha=0.1
 optimal_l1=0.28
 
-# Output ROC plots
+# Output ROC plots for RNAseq distribution data
 python scripts/nf1_classifier.py \
 --gene 'NF1' \
 --tissue 'GBM' \
@@ -78,26 +80,12 @@ python scripts/nf1_classifier.py \
 # Process HTA2.0 CEL files
 Rscript scripts/preprocess_validation.r
 
-# Transform X matrix to microarray distribution and zero-one normalize
+# Transform X matrix to microarray distribution and normalize
 python scripts/transform_rnaseq.py \
 --microarray-fh 'data/validation/normalized/validation_set.tsv' \
 --rnaseq-fh 'data/X/raw/GBM_RNAseq_X_matrix.tsv' \
 --out-fh 'data/X/tdm/raw_norm_GBM.tsv' \
 --normalization 'zscore'
-
-# Output ROC plot for transformed data and get gene coefficients
-python scripts/nf1_classifier.py \
---gene 'NF1' \
---tissue 'GBM' \
---classifier 'elasticnet' \
---output-file 'results/roc_tdm_output.tsv' \
---iterations 100 \
---hyperparameters $optimal_alpha_tdm \
---alt-params $optimal_l1_tdm \
---y-origin-fh 'data/Y/' \
---x-origin-fh 'data/X/tdm/raw_norm_' \
---plot-roc \
---coef-weights
 
 ##################
 # Step 5 - Validation
@@ -119,13 +107,27 @@ python scripts/nf1_classifier.py \
 optimal_alpha_tdm=0.1
 optimal_l1_tdm=0.1
 
+# Output ROC plot for transformed data and get gene coefficients
+python scripts/nf1_classifier.py \
+--gene 'NF1' \
+--tissue 'GBM' \
+--classifier 'elasticnet' \
+--output-file 'results/roc_tdm_output.tsv' \
+--iterations 100 \
+--hyperparameters $optimal_alpha_tdm \
+--alt-params $optimal_l1_tdm \
+--y-origin-fh 'data/Y/' \
+--x-origin-fh 'data/X/tdm/raw_norm_' \
+--plot-roc \
+--coef-weights
+
 # Apply classifier to validation data
 python scripts/validation.py \
-validation-fh 'data/validation/normalized/validation_set.tsv' \
-x-matrix 'data/X/tdm/raw_norm_GBM.tsv' \
-out-fh 'results/validation_results.tsv' \
-hyperparameters $optimal_alpha_tdm \
-alt-params $optimal_l1_tdm \
-ensemble 100
+--validation-fh 'data/validation/normalized/validation_set.tsv' \
+--x-matrix 'data/X/tdm/raw_norm_GBM.tsv' \
+--out-fh 'results/validation_results.tsv' \
+--hyperparameters $optimal_alpha_tdm \
+--alt-params $optimal_l1_tdm \
+--ensemble 100
 
 

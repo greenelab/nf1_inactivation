@@ -25,7 +25,7 @@ Y matrix of mutation status for the input gene
 
 import pandas as pd
 import argparse
-from knn import get_y_class
+from util.knn import get_y_class
 
 ####################################
 # Load Command Arguments
@@ -38,9 +38,9 @@ parser.add_argument("-t", "--tissue", dest="tissue",
 parser.add_argument("-f", "--filter", dest="filter",
                     help="classes of mutations to filter from gold standard",
                     default='Silent')
-parser.add_argument("-u", "--unclass", dest='unclass', action='store_true',
-                    help="determine to remove samples that have not been"
-                         "sequenced")
+parser.add_argument("-u", "--unclassified", dest='unclass',
+                    action='store_true', help="determine to remove samples "
+                    "that have not been sequenced")
 parser.add_argument("-y", "--y-origin", dest="out_fh",
                     help="Location of where to save the y files",
                     default='data/Y/')
