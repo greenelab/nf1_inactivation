@@ -34,14 +34,16 @@ but it can be built upon.
 """
 
 import os
+import random
+import argparse
 import pandas as pd
 import numpy as np
+from subprocess import call
+
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import roc_auc_score, roc_curve
-import random
-import argparse
-from subprocess import call
+
 from util.cancer_cv import cancer_cv
 
 # Set seed
@@ -70,6 +72,7 @@ def generate_y_dict(sample_dictionary, gene, tissue, y_base='data/Y/'):
     # Load X and y
     ####################################
     y_files = os.listdir(y_base)
+    y_files = [y for y in y_files if y != '.empty']
 
     y_dict = {}
     for tis in sample_dictionary.keys():
@@ -80,6 +83,7 @@ def generate_y_dict(sample_dictionary, gene, tissue, y_base='data/Y/'):
 
             # Read in the file and generate dataframe
             y = pd.read_csv(y_file, delimiter='\t')
+
             if y.shape[1] == 1:
                 sample_names = sample_dictionary[tis]
                 y['Samples'] = sample_names
@@ -204,6 +208,7 @@ if __name__ == '__main__':
     GET_COEF = args.coefficients
     WEIGHT_FH = 'results/' + TISSUE + '_' + CLASSIFIER + '_' + FIG_BASE + \
                 '_weights.tsv'
+
     ####################################
     # Load and Process Data
     ####################################
@@ -237,7 +242,7 @@ if __name__ == '__main__':
         V = V.ix[mad.index]
         V = V.dropna()
         X = X.ix[V.index]
-        print(X.shape)
+
     # roc output is iteratively made if ROC curve is to be output
     if ROC:
         col_names = ['tpr', 'fpr', 'auc', 'type']
@@ -274,6 +279,7 @@ if __name__ == '__main__':
                                                       x_test, y_test)
                     cv_accuracy.append(['train', tr_err, param, TISSUE, seed])
                     cv_accuracy.append(['test', te_err, param, TISSUE, seed])
+
                 elif CLASSIFIER == 'elasticnet':
                     for param_b in L:
                         clf = SGDClassifier(loss='log',
@@ -346,6 +352,10 @@ if __name__ == '__main__':
         sorted_weight = weight_coef.sort_values('abs', ascending=False)
         sorted_weight = sorted_weight['weight']
         sorted_weight.to_csv(WEIGHT_FH, index=True, sep='\t')
+
+        command = 'R --no-save --args ' + WEIGHT_FH + ' ' + \
+                  'figures/weight_genes.png < scripts/viz/viz_geneweights.r'
+        call(command, shell=True)
 
     ####################################
     # Plot

@@ -12,15 +12,26 @@
 
 # Load library
 library(ggplot2)
+library(dplyr)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
 print(args)
 roc_fh <- args[1]
 roc_png <- args[2]
+roc_results <- paste0('results/', unlist(strsplit(unlist(strsplit(roc_png, '/'))[2], '[.]'))[1], '_auroc.tsv')
 
 # Load Data
 roc_data <- readr::read_tsv(roc_fh)
+
+# Save the AUROC values group_by(alpha) %>% summarise(avg = mean(error))
+mean_auroc <- roc_data %>% group_by(type) %>% summarise(avg = mean(auc))
+range_auroc_low <- roc_data %>% group_by(type) %>% summarise(ci_low = quantile(auc, 0.05))
+range_auroc_high <- roc_data %>% group_by(type) %>% summarise(ci_high = quantile(auc, 0.95))
+
+auroc_results <- cbind(mean_auroc, range_auroc_low$ci_low, range_auroc_high$ci_high)
+colnames(auroc_results) <- c('type', 'mean', '0.05 CI', '0.95 CI')
+write.table(auroc_results, roc_results, row.names = F, sep = '\t')
 
 # Plot
 roc <- ggplot(roc_data, aes(x = fpr, y = tpr, colour = type, fill = type)) +

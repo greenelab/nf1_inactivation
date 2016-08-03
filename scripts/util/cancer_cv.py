@@ -30,11 +30,6 @@ class cancer_cv(object):
         :return: a dictionary holding y matrices for each fold
         """
 
-        import random
-
-        # Set seed
-        random.seed(123)
-
         self.y_dictionary = y_dict
         self.num_folds = fold
         self.seed = seed
@@ -70,6 +65,7 @@ class cancer_cv(object):
         import random
         import numpy as np
         import pandas as pd
+
         random.seed(self.seed)
 
         cv_folds = dict.fromkeys(range(0, self.num_folds))
@@ -190,14 +186,14 @@ class cancer_cv(object):
             self.x_folds[cv_key] = x_subset
 
     def split_train_test(self, fold):
-        '''
+        """
         Will partition x and y into training and testing sets with equal parts
 
         :param fold: the given fold to extract test set
 
         Output:
         training and testing x's and y's according to the subset fold
-        '''
+        """
 
         import pandas as pd
 
