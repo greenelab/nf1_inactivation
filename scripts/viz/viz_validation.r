@@ -13,8 +13,6 @@
 # 2) Scatterplot of predictions by quantified protein
 # 3) Boxplot of predictions for NF1 WT/Inactive protein
 
-set.seed(1234)
-
 # Load libraries
 library(ggplot2)
 library(dplyr)
@@ -142,6 +140,9 @@ predict_plot$predict_nf1 <- factor(predict_plot$predict_nf1,
 predict_plot <- predict_plot[1:(nrow(predict_plot) - 2), ]
 predict_plot[predict_plot$sample_id == 'H5M', 'u87pi.norm'] <- h5m_mean
 predict_plot[predict_plot$sample_id == 'CB2', 'u87pi.norm'] <- cb2_mean
+
+# Set seed for geom_jitter()
+set.seed(1234)
 
 png(figure_pred, height = 250, width = 360)
 ggplot(predict_plot, aes(x = predict_nf1, y = u87pi.norm)) +

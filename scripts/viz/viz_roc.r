@@ -58,7 +58,7 @@ roc <- ggplot(roc_data, aes(x = fpr, y = tpr, colour = type, fill = type)) +
 
 dens_cdf <- ggplot(roc_data, aes(x = auc, colour = type, fill = type)) + 
   stat_ecdf(aes(ymin = 0, ymax = ..y..), geom = 'ribbon', alpha = 0.5) +
-  labs(x = 'Balanced AUROC', y = 'CDF') +
+  labs(x = 'AUROC', y = 'CDF') +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         panel.background = element_blank(),
