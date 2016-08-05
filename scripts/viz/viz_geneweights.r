@@ -20,6 +20,7 @@ library(calibrate)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
+args <- c('results/GBM_elasticnet_roc_tdm_output_weights.tsv', 'test_weights.png')
 print(args)
 weight_fh <- args[1]
 out_fh <- args[2]
@@ -27,7 +28,7 @@ out_fh <- args[2]
 # Load Constants and Data
 weight <- read.table(weight_fh, header = F, stringsAsFactors = F)
 colnames(weight) <- c('gene', 'weight')
-weight <- weight[order(weight$weight, decreasing = F), ]
+weight <- weight[order(weight$weight, decreasing = T), ]
 weight$rank <- 1:nrow(weight)
 
 # Scale the weights to unit norm
@@ -37,13 +38,14 @@ weight$weight <- weight$weight / nrow(weight)
 high_weight <- sd(weight$weight) * 2
 
 # Plot
-png(out_fh, height = 370, width = 550)
+png(out_fh, height = 370, width = 400)
 ggplot(weight, aes(x = rank, y = weight)) + 
   geom_point() + xlab('Rank') + ylab('Gene Weight') +
   geom_hline(yintercept = 0, linetype = "dotted", lwd = 1, color = 'red') +
   geom_hline(yintercept = high_weight, linetype = "dashed", lwd = 1.2, color = 'red') +
   geom_hline(yintercept = -high_weight, linetype = "dashed", lwd = 1.2, color = 'red') +
   theme(title = element_text(size = rel(2.2)),
+        axis.title = element_text(size = rel(0.6)),
         axis.text.x = element_text(size = rel(1.5)),
         axis.text.y = element_text(size = rel(1.5)),
         legend.position = "none",

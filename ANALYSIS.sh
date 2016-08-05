@@ -59,8 +59,8 @@ python scripts/nf1_classifier.py \
 # Step 3 - Inspect Model
 ##################
 # Optimal Hyperparameters for RNAseq Distribution
-optimal_alpha=0.1
-optimal_l1=0.28
+optimal_alpha=0.15
+optimal_l1=0.1
 
 # Output ROC plots for RNAseq distribution data
 python scripts/nf1_classifier.py \
@@ -68,7 +68,7 @@ python scripts/nf1_classifier.py \
 --tissue 'GBM' \
 --classifier 'elasticnet' \
 --output-file 'results/roc_output.tsv' \
---iterations 20 \
+--iterations 50 \
 --hyperparameters $optimal_alpha \
 --alt-params $optimal_l1 \
 --y-origin-fh 'data/Y/' \
@@ -103,8 +103,8 @@ python scripts/nf1_classifier.py \
 --x-origin-fh 'data/X/tdm/raw_norm_' \
 --validation-sub
 
-# Reset the optimal parameters
-optimal_alpha_tdm=0.1
+# TDM transformed optimal parameters
+optimal_alpha_tdm=0.15
 optimal_l1_tdm=0.1
 
 # Output ROC plot for transformed data and get gene coefficients

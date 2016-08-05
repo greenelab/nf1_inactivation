@@ -47,7 +47,7 @@ if (ml == 'SVM') {
 # Plot Parameter Sweep
 ##############################
 param_sweep <- param_sweep + stat_smooth(method = 'loess', se = TRUE) + 
-  labs(x = x_label, y = 'Balanced AUROC') +
+  labs(x = x_label, y = 'AUROC') +
   ggtitle(title) + 
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -89,7 +89,7 @@ data_sub <- data_cv[data_cv$alpha == best_alpha, ]
 
 best_alpha_plot <- ggplot(data_sub, aes(class, error)) +
   stat_boxplot(aes(fill = class)) +
-  xlab('') + ylab('Balanced AUROC') + facet_grid(. ~ l1_ratio) +
+  xlab('') + ylab('AUROC') + facet_grid(. ~ l1_ratio) +
   theme(title = element_text(size = 20),
         axis.text.x = element_blank(),
         axis.text.y = element_text(size = 20),
@@ -121,7 +121,7 @@ l1_sub <- data_sub[data_sub$l1_ratio == best_l1, ]
 
 best_l1_plot <- ggplot(l1_sub, aes(class, error)) +
   stat_boxplot(aes(fill = class)) +
-  xlab('') + ylab('Balanced AUROC') +
+  xlab('') + ylab('AUROC') +
   theme(title = element_text(size = 20),
         axis.text.x = element_blank(),
         axis.text.y = element_text(size = 20),
