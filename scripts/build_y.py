@@ -25,7 +25,7 @@ Y matrix of mutation status for the input gene
 
 import pandas as pd
 import argparse
-from util.knn import get_y_class
+from util.get_y_class import get_y_class
 
 ####################################
 # Load Command Arguments
