@@ -12,6 +12,13 @@ engines:
     enabled: true
   radon:
     enabled: true
+  pep8:
+    enabled: true
+    config:
+      languages:
+      - python
+  markdownlint:
+    enabled: true
 ratings:
   paths:
   - "**.inc"
