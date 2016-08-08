@@ -1,7 +1,7 @@
 # NF1 Inactivation Classifier for Glioblastoma
 
-**(C) 2016 Gregory Way, Robert Allaway, Rebecca Barnard, 
-Stephanie Bouley, Brian O'Roak, Camilo Fadul, 
+**(C) 2016 Gregory Way, Robert Allaway, Rebecca Barnard,
+Stephanie Bouley, Brian O'Roak, Camilo Fadul,
 Yolanda Sanchez, and Casey Greene**
 
 ---
@@ -30,7 +30,6 @@ synthetically lethal in NF1 inactivated cells
 the ability to detect patients with NF1 inactivation signatures could inform
 treatment decisions.
 
-
 ## CONTACT
 
 Please report all bugs and direct analysis questions to:
@@ -48,10 +47,9 @@ RECOMMENDED:
 To ensure reproducibility our analyses should be performed using the provided
 [Docker image](https://hub.docker.com/r/gregway/nf1_inactivation).
 
-
 ## DATA
 
-All data is publicly available. TCGA data used to train the classifier was 
+All data is publicly available. TCGA data used to train the classifier was
 retrieved from [UCSC Xena](https://genome-cancer.soe.ucsc.edu/proj/site/xena/datapages/).
 All of our validation data was deposited in [GEO](http://www.ncbi.nlm.nih.gov/geo/).
 
