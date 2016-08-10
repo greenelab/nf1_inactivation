@@ -49,9 +49,9 @@ args = parser.parse_args()
 ####################################
 # Load Constants
 ####################################
-GENE = args.gene
+GENE = args.gene.split(',')
 TISSUE = args.tissue
-FILTER = args.filter
+FILTER = args.filter.split(',')
 UNCLASSIFIED = args.unclass
 OUT_FH = args.out_fh
 
@@ -68,7 +68,7 @@ file_name = OUT_FH + 'Y_' + TISSUE + '_' + GENE + '.tsv'
 
 # Retrieve information about gold standard samples
 mut_status, gold_neg, gold_pos, unclass, X = get_y_class(mutation, TISSUE,
-                                                         [GENE], [FILTER])
+                                                         GENE, FILTER)
 
 # Generate dataframe
 output_y = pd.DataFrame([mut_status, X.columns.values.tolist()]).T
