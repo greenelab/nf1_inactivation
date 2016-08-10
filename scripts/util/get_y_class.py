@@ -22,7 +22,7 @@ def get_y_class(mut, tis, gene, mut_filt, x_base='data/X/normalized/'):
     Arguments:
     :param mut: pandas dataframe with mutation info
     :param tis: the tissue to load X
-    :param gene: string indicating gene in mutation dataframe
+    :param gene: list of genes in mutation dataframe
     :param mut_filt: list of classes of mutations to filter
     :param x_base: string of where the X matrices are stored
 
