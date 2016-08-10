@@ -11,7 +11,7 @@ Import only
 '''
 
 
-class cancer_cv(object): 
+class cancer_cv(object):
     """
     A class to determine cross validation intervals for pancancer tissues with
     careful consideration to split cv folds with equal number of mutations and
