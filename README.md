@@ -44,8 +44,8 @@ provided in `ANALYSIS.sh`
 
 ## Contact
 
-Please report all bugs and direct analysis questions to:
-`gregway@mail.med.upenn.edu`
+Please report all bugs and direct analysis questions by filing a
+[GitHub issue](https://github.com/greenelab/nf1_inactivation/issues)
 
 Please direct all other correspondence to: `csgreene@mail.med.upenn.edu` or
 `yolanda.sanchez@dartmouth.edu`
