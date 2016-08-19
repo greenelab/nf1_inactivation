@@ -1,6 +1,11 @@
 """
+<<<<<<< HEAD
 Gregory Way 2016
 GBM NF1 Classifier
+=======
+(C) Gregory Way 2016
+PanCancer NF1 Classifier
+>>>>>>> upstream/master
 scripts/util/get_y_class.py
 
 Description:
