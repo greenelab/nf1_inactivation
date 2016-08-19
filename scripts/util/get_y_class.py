@@ -1,6 +1,6 @@
 """
-(C) Gregory Way 2016
-PanCancer NF1 Classifier
+Gregory Way 2016
+GBM NF1 Classifier
 scripts/util/get_y_class.py
 
 Description:
