@@ -1,7 +1,7 @@
 # NF1 Inactivation Classifier for Glioblastoma
 
-**2016 Gregory Way, Robert Allaway, Rebecca Barnard,
-Stephanie Bouley, Brian O'Roak, Camilo Fadul,
+**2016 Gregory Way, Robert Allaway, 
+Stephanie Bouley, Camilo Fadul,
 Yolanda Sanchez, and Casey Greene**
 
 ---
