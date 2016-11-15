@@ -33,8 +33,8 @@ treatment decisions.
 ## Code
 
 * A step-by-step guide of all analyses for the NF1 inactivation project is
-provided in `ANALYSIS.sh`
-* All required R packages are installed by `INSTALL.R`.
+provided in `run_pipeline.sh`
+* All required R packages are installed by `install.R`.
 * `scripts/` - all the main functions and pipeline scripts are provided
   * |- `util/` - several helper functions including:
     * |- `cancer_cv.py` - cross validation logic to ensure equal partitioning
@@ -53,7 +53,7 @@ Please direct all other correspondence to: `csgreene@mail.med.upenn.edu` or
 ## Analysis
 
 To reproduce and build upon our analyses, clone the repository and run
-`./ANALYSIS.sh`.
+`./run_pipeline.sh`.
 
 RECOMMENDED:
 To ensure reproducibility our analyses should be performed using the provided
