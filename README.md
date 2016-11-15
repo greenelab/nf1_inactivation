@@ -32,8 +32,7 @@ treatment decisions.
 
 ## Code
 
-* A step-by-step guide of all analyses for the NF1 inactivation project is
-provided in `run_pipeline.sh`
+* See `run_pipeline.sh` for a step-by-step guide of all analyses.
 * All required R packages are installed by `install.R`.
 * `scripts/` - all the main functions and pipeline scripts are provided
   * |- `util/` - several helper functions including:
