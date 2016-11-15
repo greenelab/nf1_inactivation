@@ -1,6 +1,14 @@
 # Custom files
 data/Cel_Camilo.tar.gz
 .Rhistory
+data/HiSeqV2
+data/PANCAN_clinicalMatrix
+data/PANCAN_mutation
+output/*
+tables/*
+data/X/normalized/*
+data/X/raw/*
+data/Y/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

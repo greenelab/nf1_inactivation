@@ -1,12 +1,12 @@
 """
-(C) Gregory Way 2016
+Gregory Way 2016
 NF1 Inactivation Classifier for Glioblastoma
 scripts/build_y.py
 
 Determine y matrix for each tissue according to mutation status and gene id
 
 Usage:
-Run on the command line 'build_tissue_specific_y_matrices.py'
+Run on the command line 'python scripts/build_y.py'
 
     With required flags:
 
@@ -64,7 +64,7 @@ mutation = pd.read_csv('data/PANCAN_mutation', delimiter='\t')
 # Build Y matrices
 ####################################
 # Generate the file name
-file_name = OUT_FH + 'Y_' + TISSUE + '_' + GENE + '.tsv'
+file_name = OUT_FH + 'Y_' + TISSUE + '_' + GENE[0] + '.tsv'
 
 # Retrieve information about gold standard samples
 mut_status, gold_neg, gold_pos, unclass, X = get_y_class(mutation, TISSUE,

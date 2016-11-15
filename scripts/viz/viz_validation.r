@@ -1,4 +1,4 @@
-# (C) Gregory Way 2016
+# Gregory Way 2016
 # NF1 Classifier GBM/LGG
 # scripts/viz/viz_validation.r
 #
@@ -133,7 +133,7 @@ predict_nf1[plot_ready$weight_auc <= 0] <- 'NF1 Wildtype'
 predict_plot <- cbind(plot_ready, predict_nf1)
 
 # Refactor for plotting
-predict_plot$predict_nf1 <- factor(predict_plot$predict_nf1, 
+predict_plot$predict_nf1 <- factor(predict_plot$predict_nf1,
                                    levels = c('NF1 Wildtype', 'NF1 Inactive'))
 
 # Reassign CB2 and H5M
