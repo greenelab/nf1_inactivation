@@ -5,9 +5,6 @@ engines:
     config:
       languages:
       - python
-      - ruby
-      - javascript
-      - python
   fixme:
     enabled: true
   radon:
