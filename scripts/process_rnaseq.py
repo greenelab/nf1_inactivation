@@ -1,5 +1,5 @@
 """
-(C) Gregory Way 2016
+Gregory Way 2016
 NF1 Inactivation Classifier for Glioblastoma
 scripts/process_rnaseq.py
 
@@ -23,10 +23,10 @@ import argparse
 ####################################
 
 
-def zero_one_normalize(data, out_fh, mad=False,
-                       mad_fh='tables/full_mad_genes.tsv',
-                       output=True,
-                       method='minmax'):
+def normalize_data(data, out_fh, mad=False,
+                   mad_fh='tables/full_mad_genes.tsv',
+                   output=True,
+                   method='minmax'):
     """
     Filters unidentified genes and normalizes each input gene expression matrix
 
@@ -117,9 +117,9 @@ if __name__ == '__main__':
             elif tissue in CONCATENATE.split(','):
                 tissue_list.append(raw)
         else:
-            zero_one_normalize(raw, out_fh, MAD, method=SCALE)
+            normalize_data(raw, out_fh, MAD, method=SCALE)
 
     if CONCATENATE:
         PANCAN_FH = 'data/X/normalized/' + PANCAN_FH + '_X_normalized.tsv'
         raw = pd.concat(tissue_list, axis=1)
-        zero_one_normalize(raw, PANCAN_FH)
+        normalize_data(raw, PANCAN_FH)

@@ -1,5 +1,5 @@
 """
-(C) Gregory Way 2016
+Gregory Way 2016
 NF1 Inactivation Classifier for Glioblastoma
 scripts/nf1_classifier.py
 
@@ -7,8 +7,8 @@ Performs cross validation to select optimal hyperparameters.
 
 Usage:
 The script is highly modular and can be used in a variety of ways depending on
-the flags. The script is run by ANALYSIS.sh with a specific set of parameters,
-but it can be built upon.
+the flags. The script is run by run_pipeline.sh with a specific set of
+parameters, but it can be built upon.
 
     With required flags:
 

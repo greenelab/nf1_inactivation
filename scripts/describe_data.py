@@ -1,5 +1,5 @@
 '''
-(C) Gregory Way 2016
+Gregory Way 2016
 NF1 Inactivation Classifier for Glioblastoma
 scripts/describe_data.py
 

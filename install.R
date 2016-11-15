@@ -1,9 +1,9 @@
-# (C) Gregory Way 2016
+# Gregory Way 2016
 # NF1 Inactivation Classifier for Glioblastoma
-# INSTALL.R
+# install.R
 #
 # Usage:
-# Run by ANALYSIS.sh to reproduce compute environment
+# Run by run_pipeline.sh to reproduce compute environment
 
 library('methods')
 

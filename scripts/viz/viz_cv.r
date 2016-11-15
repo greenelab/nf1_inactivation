@@ -1,4 +1,4 @@
-# (C) Gregory Way 2016
+# Gregory Way 2016
 # NF1 Classifier GBM/LGG
 # scripts/viz/viz_cv.r
 #
@@ -39,22 +39,22 @@ if (ml == 'SVM') {
   w <- 700
   h <- 500
   title <- 'Hyperparameter: Alpha'
-  param_sweep <- ggplot(data_cv, aes(x = l1_ratio, y = error, colour = class, fill = class)) + 
+  param_sweep <- ggplot(data_cv, aes(x = l1_ratio, y = error, colour = class, fill = class)) +
     facet_wrap(~ alpha)
 }
 
 ##############################
 # Plot Parameter Sweep
 ##############################
-param_sweep <- param_sweep + stat_smooth(method = 'loess', se = TRUE) + 
+param_sweep <- param_sweep + stat_smooth(method = 'loess', se = TRUE) +
   labs(x = x_label, y = 'AUROC') +
-  ggtitle(title) + 
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), 
+  ggtitle(title) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         title = element_text(size = rel(2)),
-        axis.line.x = element_line(size = rel(1), linetype = "solid", color = "black"), 
-        axis.line.y = element_line(size = rel(1), linetype = "solid", color = "black"), 
+        axis.line.x = element_line(size = rel(1), linetype = "solid", color = "black"),
+        axis.line.y = element_line(size = rel(1), linetype = "solid", color = "black"),
         axis.text = element_text(size = rel(1), color = "black"),
         axis.ticks = element_line(size = rel(1), color = "black"),
         axis.ticks.length = unit(0.2, "cm"),
@@ -62,7 +62,7 @@ param_sweep <- param_sweep + stat_smooth(method = 'loess', se = TRUE) +
         axis.title.y = element_text(vjust = 4.5),
         axis.title.x = element_text(vjust = -4.5),
         legend.key.size = unit(1, "cm"),
-        legend.text = element_text(size = rel(1.2)), 
+        legend.text = element_text(size = rel(1.2)),
         legend.title = element_text(size = rel(1.2)))
 
 # Save
@@ -102,7 +102,7 @@ best_alpha_plot <- ggplot(data_sub, aes(class, error)) +
         axis.line = element_line(color = 'black', size = 0.5),
         axis.ticks = element_blank(),
         title = element_text(size = 25)) +
-       # plot.margin = unit(c(1.2, 2, 0, 1.5), 'cm')) + 
+       # plot.margin = unit(c(1.2, 2, 0, 1.5), 'cm')) +
   ggtitle(paste0('l1 Ratio', '\nalpha = ', best_alpha))
 
 # Save

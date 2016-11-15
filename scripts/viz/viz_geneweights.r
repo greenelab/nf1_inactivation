@@ -1,11 +1,11 @@
-# (C) Gregory Way 2016
+# Gregory Way 2016
 # NF1 Classifier GBM/LGG
 # scripts/viz/viz_geneweights.r
 #
 # vizualize the distribution of gene predictive weights
 #
 # Usage:
-# Run by ANALYSIS.sh 
+# Run by ANALYSIS.sh
 #
 # Output:
 # 1) Figure - distribution of gene weights across ensemble
@@ -39,7 +39,7 @@ high_weight <- sd(weight$weight) * 2
 
 # Plot
 png(out_fh, height = 370, width = 400)
-ggplot(weight, aes(x = rank, y = weight)) + 
+ggplot(weight, aes(x = rank, y = weight)) +
   geom_point() + xlab('Rank') + ylab('Gene Weight') +
   geom_hline(yintercept = 0, linetype = "dotted", lwd = 1, color = 'red') +
   geom_hline(yintercept = high_weight, linetype = "dashed", lwd = 1.2, color = 'red') +

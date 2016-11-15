@@ -1,12 +1,12 @@
 '''
-(C) Gregory Way 2016
+Gregory Way 2016
 NF1 Inactivation Classifier for Glioblastoma
 scripts/build_x.py
 
 Load in normalized expression matrix and subset to tissue
 
 Usage:
-Is called by ANALYSIS.sh but can be run separately on the command line
+Is called by run_pipeline.sh but can be run separately on the command line
 
         example: python build_x.py -t 'GBM'
 

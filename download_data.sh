@@ -2,7 +2,7 @@
 
 ##################
 # NF1 Inactivation Classifier for Glioblastoma
-# (C) Gregory Way 2016
+# Gregory Way 2016
 ##################
 
 # All data is publicly available and downloaded from UCSC Xena
