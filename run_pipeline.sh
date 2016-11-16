@@ -48,12 +48,12 @@ l1_ratio='0.1,0.15,0.18,0.2,0.22,0.24,0.26,0.28,0.3,0.4,0.5,0.6,0.7,0.8,0.9'
 python scripts/nf1_classifier.py \
         --gene 'NF1' \
         --tissue 'GBM' \
-        --output-file 'results/gbm_elasticnet_cv.tsv' \
+        --output_file 'results/gbm_elasticnet_cv.tsv' \
         --classifier 'elasticnet' \
         --hyperparameters $alpha_param \
-        --alt-params $l1_ratio \
+        --alt_params $l1_ratio \
         --iterations 50 \
-        --y-origin-fh 'data/Y/'
+        --y_origin_fh 'data/Y/'
 
 ##################
 # Step 3 - Inspect Model
@@ -67,12 +67,13 @@ python scripts/nf1_classifier.py \
         --gene 'NF1' \
         --tissue 'GBM' \
         --classifier 'elasticnet' \
-        --output-file 'results/roc_output.tsv' \
+        --output_file 'results/roc_output.tsv' \
         --iterations 50 \
         --hyperparameters $optimal_alpha \
-        --alt-params $optimal_l1 \
-        --y-origin-fh 'data/Y/' \
-        --plot-roc
+        --alt_params $optimal_l1 \
+        --y_origin_file 'data/Y/' \
+        --plot_roc \
+        --effect_size
 
 ##################
 # Step 4 - Process Validation Data
