@@ -4,11 +4,17 @@ data/Cel_Camilo.tar.gz
 data/HiSeqV2
 data/PANCAN_clinicalMatrix
 data/PANCAN_mutation
-output/*
-tables/*
-data/X/normalized/*
-data/X/raw/*
-data/Y/*
+output/
+tables/
+data/X/normalized/
+data/X/raw/
+data/Y/
+*.ipynb
+*.pdf
+*.png
+*.tsv
+figures/
+results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
