@@ -14,23 +14,24 @@ parameters, but it can be built upon.
 
     --gene             The gene to determine mutation status for (e.g. 'NF1')
     --tissue           Tissue acronym (e.g. GBM for glioblastoma)
-    --ouput-file       The location to save the cross validation results
+    --ouput_file       The location to save the cross validation results
     --classifier       Classifier to use (can be either 'elasticnet' or 'SVM')
-    --y-origin-fh      The location where the Y matrix is stored
+    --y_origin_fh      The location where the Y matrix is stored
     --hyperparameters  The hyperparameters to test during cross validation
 
     And the following optional flags:
 
-    --alt-params       A second set of hyperparameters to test
+    --alt_params       A second set of hyperparameters to test
     --folds            The number of cross validation folds to compute
     --holdout          Option to extract a holdout set (defaults to False)
-    --fraction-hold    What percentage of data to holdout (defaults to 10%)
-    --min-samples      Minimum samples with mutation in tissue (defaults to 5)
+    --fraction_hold    What percentage of data to holdout (defaults to 10%)
+    --min_samples      Minimum samples with mutation in tissue (defaults to 5)
     --iterations       Number training/testing to perform (defaults to 50)
     --num_mad_genes    Number of MAD genes to subset the X (defaults to 8000)
-    --x-origin-fh      The location where the X matrix is stored
-    --plot-roc         Should an ROC curve be output
-    --validation-sub   Subset based on validation genes (defaults to False)
+    --x_origin_fh      The location where the X matrix is stored
+    --plot_roc         Should an ROC curve be output
+    --validation_sub   Subset based on validation genes (defaults to False)
+    --effect_size      Calculate effect size of the cross validation intervals
 """
 
 import os
@@ -39,6 +40,8 @@ import argparse
 import pandas as pd
 import numpy as np
 from subprocess import call
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
@@ -117,118 +120,177 @@ def train_test_error(clf, train_x, train_y, test_x, test_y):
     test_err = roc_auc_score(test_y, pred_y, average='weighted')
     return train_err, test_err
 
-####################################
-# Perform Analysis
-####################################
+
+def get_cohens_d(score_df):
+    """
+    Find the effect size of decision functions for the input scoring dataframe
+
+    Arguments:
+    :param score_df: pandas DataFrame with decision function scores and status
+
+    Output:
+    Returns the Cohen's d effect size estimate statistic for two status groups
+    """
+    pos_samples = np.array(score_df[score_df['status'] == 1].decision.tolist())
+    neg_samples = np.array(score_df[score_df['status'] == 0].decision.tolist())
+    var_pos = np.sum((pos_samples - np.mean(pos_samples)) ** 2)
+    var_neg = np.sum((neg_samples - np.mean(neg_samples)) ** 2)
+    sd_pool = ((var_pos + var_neg) / (len(pos_samples) +
+                                      len(neg_samples) - 2)) ** (1/2)
+    cohen = (np.mean(pos_samples) - np.mean(neg_samples)) / sd_pool
+    return cohen
+
+
+def plot_decision_function(score_df, partition, output_file):
+    """
+    Plots the decision function for a given partition (either 'train' or
+    'test') and saves a figure to file.
+
+    Arguments:
+    :param score_df: a specific folds decision scores and status
+    :param partition: either 'train' or 'test' will plot performance
+    :param output_file: file to output the figure
+    """
+    ax = sns.kdeplot(score_df.ix[(score_df.status == 1) &
+                                 (score_df.partition == partition), :]
+                     .decision, color='red', label='Deficient',
+                     shade=True)
+    ax = sns.kdeplot(score_df.ix[(score_df.status == 0) &
+                                 (score_df.partition == partition), :]
+                     .decision, color='blue', label='Wild-Type',
+                     shade=True)
+    ax.set(xlabel='Decision Function', ylabel='Density')
+    ax.set_title('Classifier Decision Function')
+    sns.despine()
+    plt.tight_layout()
+    plt.savefig(output_file)
+    plt.close()
+
+
 if __name__ == '__main__':
-    ####################################
     # Load Command Arguments
-    ####################################
-    parser = argparse.ArgumentParser()  # Load command line options
+    parser = argparse.ArgumentParser()
 
     # Required parameters
     parser.add_argument("-g", "--gene", dest="gene",
                         help="which gene to prepare cross validation")
     parser.add_argument("-t", "--tissue", dest="tissue",
                         help="which X matrix to load")
-    parser.add_argument("-o", "--output-file", dest="out_fh",
+    parser.add_argument("-o", "--output_file", dest="out_file",
                         help="location to write the results to")
     parser.add_argument("-c", "--classifier", dest="classifier",
                         help="the type of classifier to use")
-    parser.add_argument("-e", "--y-origin-fh", dest="y_origin_fh",
+    parser.add_argument("-e", "--y_origin_file", dest="y_origin_file",
                         help="Where the y matrices are pulled from",
                         default='data/Y/')
     parser.add_argument("-y", "--hyperparameters", dest="hyperparameters",
                         help="hyperparameters to optimize in cross validation")
 
     # Optional parameters
-    parser.add_argument("-x", "--alt-params", dest="alt_params",
+    parser.add_argument("-x", "--alt_params", dest="alt_params",
                         help="additional set of hyperparameters to optimize in"
                              "cross validation", default=0.1)
     parser.add_argument("-f", "--num_folds", dest="num_folds", default=5,
                         help="the number of cross validation fold intervals")
     parser.add_argument("-z", "--holdout", dest="holdout", default=False,
                         help="boolean of extracting holdout set or not")
-    parser.add_argument("-p", "--fraction-holdout", dest="fraction_holdout",
+    parser.add_argument("-p", "--fraction_holdout", dest="fraction_holdout",
                         help="Fraction of samples to be heldout", default=0.1)
-    parser.add_argument("-m", "--min-samples", dest="min_samples",
+    parser.add_argument("-m", "--min_samples", dest="min_samples",
                         help="the minimum number of samples with a mutation to"
                         "consider the tissue", default=5)
     parser.add_argument("-i", "--iterations", dest="iterations",
                         help="number of random seed shuffles", default=50)
     parser.add_argument("-n", "--num_mad_genes", dest="num_mad_genes",
                         help="number of mad genes to subset", default=8000)
-    parser.add_argument("-d", "--x-origin-fh", dest="x_origin_fh",
+    parser.add_argument("-d", "--x_origin_file", dest="x_origin_file",
                         help="Where the x matrices are pulled from",
                         default='data/X/normalized/')
-    parser.add_argument("-r", "--plot-roc", dest="roc",
+    parser.add_argument("-r", "--plot_roc", dest="roc",
                         help="decide if an ROC plot should be output",
                         action='store_true')
-    parser.add_argument("-v", "--validation-sub", dest='validation_sub',
+    parser.add_argument("-v", "--validation_sub", dest='validation_sub',
                         action='store_true')
-    parser.add_argument("-w", "--coef-weights", dest='coefficients',
+    parser.add_argument("-w", "--coef_weights", dest='coefficients',
+                        action='store_true')
+    parser.add_argument("-s", "--effect_size", dest='effect_size',
+                        help="determine effect sizes of cv folds",
                         action='store_true')
     args = parser.parse_args()
 
-    ####################################
     # Load Constants
-    ####################################
     # Required parameters
-    GENE = args.gene
-    TISSUE = args.tissue.replace(',', '-')
-    OUT_FH = args.out_fh
-    CLASSIFIER = args.classifier
-    Y_BASE = args.y_origin_fh
-    C = args.hyperparameters.split(',')
+    gene = args.gene
+    tissue = args.tissue.replace(',', '-')
+    out_file = args.out_file
+    classifier = args.classifier
+    y_base = args.y_origin_file
+    c = args.hyperparameters.split(',')
 
     # Optional parameters
-    L = args.alt_params.split(',')
-    NUM_FOLDS = args.num_folds
-    HOLD = args.holdout
-    FRACTION_HOLDOUT = args.fraction_holdout
-    MIN_SAMPLES = args.min_samples
-    K = args.iterations
-    RANDOM_SEEDS = random.sample(range(1, 1000000), int(K))
-    NUM_MAD_GENES = args.num_mad_genes
-    X_BASE = args.x_origin_fh
-    ROC = args.roc
-    VALIDATION_SUBSET = args.validation_sub
+    l = args.alt_params.split(',')
+    num_folds = args.num_folds
+    hold = args.holdout
+    fraction_holdout = args.fraction_holdout
+    min_samples = args.min_samples
+    k = args.iterations
+    random_seeds = random.sample(range(1, 1000000), int(k))
+    num_mad_genes = args.num_mad_genes
+    x_base = args.x_origin_file
+    roc = args.roc
+    validation_subset = args.validation_sub
+    effect_size = args.effect_size
 
     # Generate filenames to save output plots
-    FIG_BASE = OUT_FH.split('/')[1].split('.')[0]
-    if ROC:
-        OUTPUT_FIGURE = 'figures/' + TISSUE + '_' + CLASSIFIER + '_' + \
-                         FIG_BASE + 'alpha_' + str(C[0]) + '_l1ratio_' + \
-                         str(L[0]) + '_roc.png'
+    fig_base = out_file.split('/')[1].split('.')[0]
+
+    if roc:
+        output_figure = os.path.join('figures',
+                                     '{}_{}_{}alpha_{}_l1ratio_{}_roc.png'
+                                     .format(tissue, classifier, fig_base,
+                                             str(c[0]), str(l[0])))
+        if effect_size:
+            cohens_d = []
+            tot_dec_s = pd.DataFrame(columns=['decision', 'status',
+                                              'partition'])
+            decision_plot_train = os.path.join('figures',
+                                               'decision_plot_train.pdf')
+            decision_plot_test = os.path.join('figures',
+                                              'decision_plot_test.pdf')
+            cohen_plot = os.path.join('figures', 'cohens_effect_size_plot.pdf')
     else:
-        OUTPUT_FIGURE = 'figures/' + TISSUE + '_' + CLASSIFIER + '_' + \
-                        FIG_BASE + '_cv.png'
-
+        output_figure = os.path.join('figures',
+                                     '{}_{}_{}_cv.png'.format(tissue,
+                                                              classifier,
+                                                              fig_base))
     # Are we interested in the weights/coefficients/genes?
-    GET_COEF = args.coefficients
-    WEIGHT_FH = 'results/' + TISSUE + '_' + CLASSIFIER + '_' + FIG_BASE + \
-                '_weights.tsv'
+    get_coef = args.coefficients
+    weight_file = os.path.join('results',
+                               '{}_{}_{}_weights.tsv'.format(tissue,
+                                                             classifier,
+                                                             fig_base))
 
-    ####################################
     # Load and Process Data
-    ####################################
     # RNAseq dictionary with sample IDs in order of columns
-    sample_dictionary = pd.read_pickle('output/RNAseq_sample_dictionary.p')
+    sample_dictionary = pd.read_pickle(
+                           os.path.join('output',
+                                        'RNAseq_sample_dictionary.p'))
 
     # Generate Y Dictionary
-    y_dict = generate_y_dict(sample_dictionary, GENE, TISSUE, Y_BASE)
+    y_dict = generate_y_dict(sample_dictionary, gene, tissue, y_base)
 
     # Load X matrix
-    if X_BASE == 'data/X/normalized/':
-        x_fh = X_BASE + TISSUE + '_X_normalized.tsv'
+    if x_base == 'data/X/normalized/':
+        x_fh = os.path.join(x_base,  '{}_X_normalized.tsv'.format(tissue))
     else:
-        x_fh = X_BASE + TISSUE + '.tsv'
+        x_fh = os.path.join(x_base, '{}.tsv'.format(tissue))
 
     X = pd.read_csv(x_fh, delimiter='\t', index_col=0)
 
     # subset using MAD genes
-    mad = pd.Series.from_csv('tables/full_mad_genes.tsv', sep='\t')
-    mad = mad[:NUM_MAD_GENES]
+    mad = pd.Series.from_csv(os.path.join('tables', 'full_mad_genes.tsv'),
+                             sep='\t')
+    mad = mad[:num_mad_genes]
     X = X.ix[mad.index]
     X = X.dropna()
 
@@ -236,59 +298,58 @@ if __name__ == '__main__':
     empty_zero = np.zeros(X.shape[0])
     weight_coef = pd.DataFrame(empty_zero, index=X.index, columns=['weight'])
 
-    if VALIDATION_SUBSET:
-        V = pd.read_csv('data/validation/normalized/validation_set.tsv',
+    if validation_subset:
+        V = pd.read_csv(os.path.join('data', 'validation', 'normalized',
+                                     'validation_set.tsv'),
                         delimiter='\t', index_col=0)
         V = V.ix[mad.index]
         V = V.dropna()
         X = X.ix[V.index]
 
     # roc output is iteratively made if ROC curve is to be output
-    if ROC:
+    if roc:
         col_names = ['tpr', 'fpr', 'auc', 'type']
         roc_output = pd.DataFrame(columns=col_names)
 
-    ####################################
     # Generate Cross Validation Parameters
-    ####################################
     # Do this for each random seed
     cv_accuracy = []
-    for seed in RANDOM_SEEDS:
+    for seed in random_seeds:
         print(seed)
         # Build a cross validation partition object
-        pancan_cv = cancer_cv(y_dict, NUM_FOLDS, HOLD, MIN_SAMPLES, seed)
+        pancan_cv = cancer_cv(y_dict, num_folds, hold, min_samples, seed)
 
         # Determine fraction to holdout and assign folds for y and x matrices
-        if HOLD:
-            pancan_cv.holdout_samples(FRACTION_HOLDOUT)
+        if hold:
+            pancan_cv.holdout_samples(fraction_holdout)
 
         # Ensures equal partitioning into training and testing datasets
         pancan_cv.assign_folds()
         pancan_cv.assign_x_matrix_folds(X)
 
-        # Perform NUM_FOLDS cross validation on the total dataset
-        for fold in range(0, NUM_FOLDS):
+        # Perform num_folds cross validation on the total dataset
+        for fold in range(0, num_folds):
 
             # Split according to the testing fold
             x_train, x_test, y_train, y_test = pancan_cv.split_train_test(fold)
 
-            for param in C:
-                if CLASSIFIER == 'SVM':
+            for param in c:
+                if classifier == 'SVM':
                     clf = SVC(C=float(param), class_weight='balanced')
                     tr_err, te_err = train_test_error(clf, x_train, y_train,
                                                       x_test, y_test)
-                    cv_accuracy.append(['train', tr_err, param, TISSUE, seed])
-                    cv_accuracy.append(['test', te_err, param, TISSUE, seed])
+                    cv_accuracy.append(['train', tr_err, param, tissue, seed])
+                    cv_accuracy.append(['test', te_err, param, tissue, seed])
 
-                elif CLASSIFIER == 'elasticnet':
-                    for param_b in L:
+                elif classifier == 'elasticnet':
+                    for param_b in l:
                         clf = SGDClassifier(loss='log',
                                             penalty='elasticnet',
                                             alpha=float(param),
                                             l1_ratio=float(param_b),
                                             class_weight='balanced',
                                             random_state=seed)
-                        if ROC:
+                        if roc:
                             clf.fit(x_train, y_train)
                             y_score = clf.decision_function(x_test)
                             y_score_train = clf.decision_function(x_train)
@@ -314,12 +375,37 @@ if __name__ == '__main__':
                                                     ignore_index=True)
                             roc_output = roc_output.append(full,
                                                            ignore_index=True)
-                            if GET_COEF:
+                            if get_coef:
                                 p_add = pd.DataFrame(clf.coef_.T,
                                                      index=x_test.columns,
                                                      columns=['weight'])
                                 weight_coef = weight_coef.add(p_add,
                                                               fill_value=0)
+                            if effect_size:
+                                # Build input dataframes
+                                y_st_df = pd.DataFrame(y_score_train,
+                                                       index=y_train.index,
+                                                       columns=['decision'])
+                                y_st_df = y_st_df.assign(status=y_train)
+                                y_st_df = y_st_df.assign(partition='train')
+
+                                y_stes_df = pd.DataFrame(y_score,
+                                                         index=y_test.index,
+                                                         columns=['decision'])
+                                y_stes_df = y_stes_df.assign(status=y_test)
+                                y_stes_df = y_stes_df.assign(partition='test')
+
+                                # Get effect size for training and testing
+                                # separately, which will quantify the
+                                # magnitude of separation between groups
+                                train_cohen = get_cohens_d(y_st_df)
+                                test_cohen = get_cohens_d(y_stes_df)
+
+                                # Compile results
+                                cohens_d.append(['train', train_cohen])
+                                cohens_d.append(['test', test_cohen])
+                                tot_dec_s = tot_dec_s.append(y_stes_df)
+                                tot_dec_s = tot_dec_s.append(y_st_df)
 
                         else:
 
@@ -329,41 +415,56 @@ if __name__ == '__main__':
                                                                    x_test,
                                                                    y_test)
                             cv_accuracy.append(['train', train_err, param,
-                                                param_b, TISSUE, seed])
+                                                param_b, tissue, seed])
                             cv_accuracy.append(['test', test_err, param,
-                                                param_b, TISSUE, seed])
+                                                param_b, tissue, seed])
 
-    ####################################
     # Write results to file
-    ####################################
-    if ROC:
-        roc_output.to_csv(OUT_FH, sep='\t', index=False)
+    if roc:
+        roc_output.to_csv(out_file, sep='\t', index=False)
     else:
         cv_accuracy = pd.DataFrame(cv_accuracy)
-        if CLASSIFIER == 'SVM':
+        if classifier == 'SVM':
             cv_accuracy.columns = ['class', 'error', 'param', 'tissue', 'seed']
-        elif CLASSIFIER == 'elasticnet':
+        elif classifier == 'elasticnet':
             cv_accuracy.columns = ['class', 'error', 'alpha', 'l1_ratio',
                                    'tissue', 'seed']
-        cv_accuracy.to_csv(OUT_FH, index=False, sep='\t')
+        cv_accuracy.to_csv(out_file, index=False, sep='\t')
 
-    if GET_COEF:
+    if get_coef:
         weight_coef['abs'] = weight_coef['weight'].abs()
         sorted_weight = weight_coef.sort_values('abs', ascending=False)
         sorted_weight = sorted_weight['weight']
-        sorted_weight.to_csv(WEIGHT_FH, index=True, sep='\t')
+        sorted_weight.to_csv(weight_file, index=True, sep='\t')
 
-        command = 'R --no-save --args ' + WEIGHT_FH + ' ' + \
+        command = 'R --no-save --args ' + weight_file + ' ' + \
                   'figures/weight_genes.png < scripts/viz/viz_geneweights.r'
         call(command, shell=True)
 
-    ####################################
     # Plot
-    ####################################
-    if ROC:
-        command = 'R --no-save --args ' + OUT_FH + ' ' + OUTPUT_FIGURE + \
+    if roc:
+        command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
                   ' < ' + 'scripts/viz/viz_roc.r'
     else:
-        command = 'R --no-save --args ' + OUT_FH + ' ' + OUTPUT_FIGURE + \
-                  ' ' + CLASSIFIER + ' < ' + 'scripts/viz/viz_cv.r'
+        command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
+                  ' ' + classifier + ' < ' + 'scripts/viz/viz_cv.r'
     call(command, shell=True)
+
+    if effect_size:
+        sns.set(font_scale=2)
+        sns.set_style("white")
+
+        # Plot Decision Functions
+        plot_decision_function(tot_dec_s, 'train', decision_plot_train)
+        plot_decision_function(tot_dec_s, 'test', decision_plot_test)
+
+        # Violin Plots of Cohen's D Effect sizes
+        cohens_df = pd.DataFrame(cohens_d, columns=['partition', 'cohens_D'])
+        ax = sns.violinplot(x='partition', y='cohens_D', data=cohens_df,
+                            palette="Set2")
+        ax.set(xlabel='', ylabel="Cohen's D")
+        ax.set_title('Cross Validation Effect Sizes')
+        sns.despine()
+        plt.tight_layout()
+        plt.savefig(cohen_plot)
+        plt.close()
