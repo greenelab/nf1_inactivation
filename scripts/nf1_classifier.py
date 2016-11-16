@@ -124,6 +124,8 @@ def train_test_error(clf, train_x, train_y, test_x, test_y):
 def get_cohens_d(score_df):
     """
     Find the effect size of decision functions for the input scoring dataframe
+    Modified from:
+    https://github.com/AllenDowney/CompStats/blob/master/effect_size.ipynb
 
     Arguments:
     :param score_df: pandas DataFrame with decision function scores and status
@@ -133,12 +135,17 @@ def get_cohens_d(score_df):
     """
     pos_samples = np.array(score_df[score_df['status'] == 1].decision.tolist())
     neg_samples = np.array(score_df[score_df['status'] == 0].decision.tolist())
-    var_pos = np.sum((pos_samples - np.mean(pos_samples)) ** 2)
-    var_neg = np.sum((neg_samples - np.mean(neg_samples)) ** 2)
-    sd_pool = ((var_pos + var_neg) / (len(pos_samples) +
-                                      len(neg_samples) - 2)) ** (1/2)
-    cohen = (np.mean(pos_samples) - np.mean(neg_samples)) / sd_pool
-    return cohen
+
+    mean_diff = pos_samples.mean() - neg_samples.mean()
+
+    n_pos, n_neg = len(pos_samples), len(neg_samples)
+
+    var_pos = pos_samples.var()
+    var_neg = neg_samples.var()
+
+    sd_pool = np.sqrt((n_pos * var_pos + n_neg * var_neg) / (n_pos + n_neg))
+    cohen_d = mean_diff / sd_pool
+    return cohen_d
 
 
 def plot_decision_function(score_df, partition, output_file):
