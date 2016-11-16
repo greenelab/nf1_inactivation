@@ -134,6 +134,7 @@ dependencies:
 - scikit-image=0.12.3=np110py35_0
 - scikit-learn=0.17.1=np110py35_0
 - scipy=0.17.0=np110py35_2
+- seaborn=0.7.1
 - setuptools=20.3=py35_0
 - simplegeneric=0.8.1=py35_0
 - singledispatch=3.4.0.3=py35_0
@@ -174,4 +175,3 @@ dependencies:
   - rope-py3k==0.9.4.post1
   - sphinx-rtd-theme==0.1.9
   - tables==3.2.2
-
