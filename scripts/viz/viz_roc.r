@@ -13,72 +13,87 @@
 # Load library
 library(ggplot2)
 library(dplyr)
+library(gridExtra)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
-print(args)
+#args <- c('results/roc_output.tsv', 'figures/GBM_elasticnet_roc_outputalpha_0.15_l1ratio_0.1_roc.pdf')
 roc_fh <- args[1]
-roc_png <- args[2]
-roc_results <- paste0('results/', unlist(strsplit(unlist(strsplit(roc_png, '/'))[2], '[.]'))[1], '_auroc.tsv')
+roc_figure <- args[2]
+roc_results <- file.path('results',
+                         paste0(tools::file_path_sans_ext(basename(args[2])),
+                                '_auroc.tsv'))
 
 # Load Data
 roc_data <- readr::read_tsv(roc_fh)
 
-# Save the AUROC values group_by(alpha) %>% summarise(avg = mean(error))
-mean_auroc <- roc_data %>% group_by(type) %>% summarise(avg = mean(auc))
-range_auroc_low <- roc_data %>% group_by(type) %>% summarise(ci_low = quantile(auc, 0.05))
-range_auroc_high <- roc_data %>% group_by(type) %>% summarise(ci_high = quantile(auc, 0.95))
+# Save train/test AUROC results
+roc_summary <- roc_data %>%
+  group_by(type, seed, fold) %>%
+  summarise(avg = mean(auc)) %>%
+  group_by(type)
 
-auroc_results <- cbind(mean_auroc, range_auroc_low$ci_low, range_auroc_high$ci_high)
+mean_auroc <- roc_summary %>% summarise(mean_auroc = mean(avg))
+range_auroc_low <- roc_summary %>% summarise(ci_low = quantile(avg, 0.05))
+range_auroc_high <- roc_summary %>% summarise(ci_high = quantile(avg, 0.95))
+
+auroc_results <- cbind(mean_auroc, range_auroc_low$ci_low,
+                       range_auroc_high$ci_high)
 colnames(auroc_results) <- c('type', 'mean', '0.05 CI', '0.95 CI')
 write.table(auroc_results, roc_results, row.names = F, sep = '\t')
 
-# Plot
-roc <- ggplot(roc_data, aes(x = fpr, y = tpr, colour = type, fill = type)) +
-  labs(x = 'False Positive Rate', y = 'True Positive Rate') +
-  geom_smooth(se = F) + ylim(0, 1) +
-  geom_abline(intercept = 0, linetype="dotted", lwd = 1.5) +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        title = element_text(size = rel(2)),
-        axis.line.x = element_line(size = rel(1), linetype = "solid", color = "black"),
-        axis.line.y = element_line(size = rel(1), linetype = "solid", color = "black"),
-        axis.text = element_text(size = rel(1), color = "black"),
-        axis.ticks = element_line(size = rel(1), color = "black"),
-        axis.ticks.length = unit(0.2, "cm"),
-        axis.title = element_text(size = rel(0.8)),
-        axis.title.y = element_text(vjust = 4.5),
-        axis.title.x = element_text(vjust = -4.5),
-        legend.key.size = unit(1, "cm"),
-        legend.text = element_text(size = rel(1.2)),
-        legend.title = element_blank(),
-        legend.key = element_rect(fill = 'white'),
-        plot.margin = unit(c(1.2, 2, 0, 1.5), 'cm'))
+# Create new variable that stores an ID for each unique iteration
+roc_data = roc_data %>% mutate(iteration = paste(seed, fold, sep = '_'))
 
-dens_cdf <- ggplot(roc_data, aes(x = auc, colour = type, fill = type)) +
+# Plot
+base_theme <- theme(panel.grid.major = element_blank(),
+                    panel.grid.minor = element_blank(),
+                    panel.background = element_blank(),
+                    axis.line.x = element_line(size = rel(0.8),
+                                               linetype = "solid",
+                                               color = "black"),
+                    axis.line.y = element_line(size = rel(0.8),
+                                               linetype = "solid",
+                                               color = "black"),
+                    axis.text = element_text(size = rel(0.6), color = "black"),
+                    axis.ticks = element_line(size = rel(0.8), color = "black"),
+                    axis.ticks.length = unit(0.2, "cm"),
+                    axis.title = element_text(size = rel(0.8)),
+                    axis.title.y = element_text(vjust = 4.5),
+                    axis.title.x = element_text(vjust = -4.5),
+                    legend.key.size = unit(0.5, "cm"),
+                    legend.text = element_text(size = rel(0.9)),
+                    legend.title = element_blank())
+
+roc_grob <- ggplot(roc_data, aes(x = fpr, y = tpr, color = type, fill = type,
+                                 group = interaction(seed, fold, type))) +
+  labs(x = 'False Positive Rate', y = 'True Positive Rate') + 
+  geom_line(stat = "smooth", method = "loess", se = TRUE, alpha = 0.2) + 
+  geom_abline(intercept = 0, linetype = "dotted", lwd = rel(0.8)) +
+  scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
+                     limits = c(0, 1.1)) +
+  base_theme + theme(plot.margin = unit(c(0.5, 1, 0, 1), 'cm'))
+
+# Summarize the AUROC for each iteration grouped by train/test
+roc_auc_data <- roc_data %>% group_by(iteration, type) %>%
+  summarize(auc_mean = mean(auc))
+
+dens_cdf_grob <- ggplot(roc_auc_data, aes(x = auc_mean, colour = type,
+                                          fill = type)) +
   stat_ecdf(aes(ymin = 0, ymax = ..y..), geom = 'ribbon', alpha = 0.5) +
   labs(x = 'AUROC', y = 'CDF') +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        title = element_text(size = rel(2)),
-        axis.line.x = element_line(size = rel(1), linetype = "solid", color = "black"),
-        axis.line.y = element_line(size = rel(1), linetype = "solid", color = "black"),
-        axis.text = element_text(size = rel(1), color = "black"),
-        axis.ticks = element_line(size = rel(1), color = "black"),
-        axis.ticks.length = unit(0.2, "cm"),
-        axis.title = element_text(size = rel(0.8)),
-        axis.title.y = element_text(vjust = 4.5),
-        axis.title.x = element_text(vjust = -4.5),
-        legend.key.size = unit(1, "cm"),
-        legend.text = element_text(size = rel(1.2)),
-        legend.title = element_blank(),
-        plot.margin = unit(c(0, 2, 2, 1.5), 'cm'))
+  geom_vline(xintercept = 0.5, linetype = "dotted", lwd = rel(0.8)) +
+  base_theme + theme(plot.margin = unit(c(0, 1, 2, 1), 'cm'))
 
-plots <- list(roc, dens_cdf)
-layout <- matrix(c(1, 1, 2), nrow = 3, byrow = TRUE)
+# Extract the legend from the CDF plot
+gtable <- ggplot_gtable(ggplot_build(dens_cdf_grob))
+legend_grob <- which(sapply(gtable$grobs, function(x) x$name == 'guide-box'))
+legend_grob <- gtable$grobs[[legend_grob]]
 
-png(roc_png, height = 500, width = 500)
-Rmisc::multiplot(plotlist = plots, layout = layout)
+layout <- matrix(c(rep(1, 90), rep(2, 10)), nrow = 5, ncol = 20)
+pdf(roc_figure, height = 7, width = 7)
+grid.arrange(arrangeGrob(roc_grob + theme(legend.position = "none"),
+                         dens_cdf_grob + theme(legend.position = "none")), 
+             layout_matrix = layout,
+             legend_grob, nrow = 1)
 dev.off()
