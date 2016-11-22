@@ -15,6 +15,7 @@ data/Y/
 *.tsv
 figures/
 results/
+*ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
