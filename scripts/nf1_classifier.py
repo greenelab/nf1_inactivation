@@ -253,7 +253,7 @@ if __name__ == '__main__':
 
     if roc:
         output_figure = os.path.join('figures',
-                                     '{}_{}_{}alpha_{}_l1ratio_{}_roc.png'
+                                     '{}_{}_{}alpha_{}_l1ratio_{}_roc.pdf'
                                      .format(tissue, classifier, fig_base,
                                              str(c[0]), str(l[0])))
         if effect_size:
@@ -261,10 +261,15 @@ if __name__ == '__main__':
             tot_dec_s = pd.DataFrame(columns=['decision', 'status',
                                               'partition'])
             decision_plot_train = os.path.join('figures',
-                                               'decision_plot_train.pdf')
+                                               '{}_decision_plot_train.pdf'
+                                               .format(fig_base))
             decision_plot_test = os.path.join('figures',
-                                              'decision_plot_test.pdf')
-            cohen_plot = os.path.join('figures', 'cohens_effect_size_plot.pdf')
+                                              '{}_decision_plot_test.pdf'
+                                              .format(fig_base))
+            cohen_plot = os.path.join('figures',
+                                      '{}_cohens_d_plot.pdf'.format(fig_base))
+            cohen_file = os.path.join('results',
+                                      '{}_cohens_d.tsv'.format(fig_base))
     else:
         output_figure = os.path.join('figures',
                                      '{}_{}_{}_cv.png'.format(tissue,
@@ -361,8 +366,10 @@ if __name__ == '__main__':
                             y_score = clf.decision_function(x_test)
                             y_score_train = clf.decision_function(x_train)
 
-                            fpr, tpr, _ = roc_curve(y_test, y_score)
-                            fpr_t, tpr_t, _ = roc_curve(y_train, y_score_train)
+                            fpr, tpr, _ = roc_curve(y_test, y_score,
+                                                    drop_intermediate=False)
+                            fpr_, tpr_, _ = roc_curve(y_train, y_score_train,
+                                                      drop_intermediate=False)
 
                             test_auc = roc_auc_score(y_test, y_score,
                                                      average='weighted')
@@ -373,13 +380,15 @@ if __name__ == '__main__':
                                                      [test_auc] * len(tpr),
                                                      ['test'] * len(tpr)],
                                                      index=col_names).T
-                            temp_train = pd.DataFrame([tpr_t, fpr_t,
-                                                      [train_auc] * len(tpr_t),
-                                                      ['train'] * len(tpr_t)],
+                            temp_train = pd.DataFrame([tpr_, fpr_,
+                                                      [train_auc] * len(tpr_),
+                                                      ['train'] * len(tpr_)],
                                                       index=col_names).T
 
                             full = temp_test.append(temp_train,
                                                     ignore_index=True)
+                            full = full.assign(seed=seed)
+                            full = full.assign(fold=fold)
                             roc_output = roc_output.append(full,
                                                            ignore_index=True)
                             if get_coef:
@@ -475,3 +484,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.savefig(cohen_plot)
         plt.close()
+
+        # Save Cohen's D effect size estimates
+        cohens_df.to_csv(cohen_file, sep='\t', index=False)
