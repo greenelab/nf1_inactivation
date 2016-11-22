@@ -17,7 +17,6 @@ library(gridExtra)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
-#args <- c('results/roc_output.tsv', 'figures/GBM_elasticnet_roc_outputalpha_0.15_l1ratio_0.1_roc.pdf')
 roc_fh <- args[1]
 roc_figure <- args[2]
 roc_results <- file.path('results',
