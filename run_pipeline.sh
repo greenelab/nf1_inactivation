@@ -83,9 +83,9 @@ Rscript scripts/preprocess_validation.R
 
 # Transform X matrix to microarray distribution and normalize
 python scripts/transform_rnaseq.py \
-        --microarray-fh 'data/validation/normalized/validation_set.tsv' \
-        --rnaseq-fh 'data/X/raw/GBM_RNAseq_X_matrix.tsv' \
-        --out-fh 'data/X/tdm/raw_norm_GBM.tsv' \
+        --microarray_file 'data/validation/normalized/validation_set.tsv' \
+        --rnaseq_file 'data/X/raw/GBM_RNAseq_X_matrix.tsv' \
+        --out_file 'data/X/tdm/GBM.tsv' \
         --normalization 'zscore'
 
 ##################
