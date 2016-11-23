@@ -6,7 +6,7 @@
 # RMA normalized gene expression matrix
 #
 # Usage:
-# Run in ANALYSIS.sh and before analyzing validation data
+# Run in run_pipeline.sh and before analyzing validation data
 #
 # Output:
 # Normalized microarray matrix for validation samples
@@ -23,20 +23,24 @@ library(annotate)
 library(affxparser)
 library(plyr)
 
+# Every plot in this analysis will be saved to the same pdf file
+pdf(file.path('data', 'validation', 'quality_control_assessment.pdf'))
+
 #########################################
 # Load and Inspect Data
 #########################################
 # Read in Cel files
-base_dir <- 'data/validation/raw/'
-celFiles <- c(list.celfiles(paste0(base_dir, 'CelA'), full.names = T),
-              list.celfiles(paste0(base_dir, 'CelB'), full.names = T))
+base_dir <- file.path('data', 'validation', 'raw')
+celFiles <- c(list.celfiles(file.path(base_dir, 'CelA'), full.names = T),
+              list.celfiles(file.path(base_dir, 'CelB'), full.names = T))
 affyExpressionFS <- read.celfiles(celFiles)
 
-sample_names <- paste(sapply(sampleNames(affyExpressionFS), function(x) {substr(x, 4, 6)}))
+sample_names <- paste(sapply(sampleNames(affyExpressionFS),
+                             function(x) {substr(x, 4, 6)}))
 
 # Visually inspect for spatial artifacts
 for (samp in 1:ncol(affyExpressionFS)) {
-  oligo::image(affyExpressionFS[, samp], transfo=rank)
+  oligo::image(affyExpressionFS[, samp], transfo = rank)
 }
 
 # MA Plots
@@ -46,8 +50,8 @@ oligo::MAplot(affyExpressionFS)
 # Process Data
 #########################################
 # RMA correction
-exp.rma <- oligo::rma(affyExpressionFS, target = "core")            # Transcript Level
-exp.rma_probe <- oligo::rma(affyExpressionFS, target = "probeset")  # Probeset Level
+exp.rma <- oligo::rma(affyExpressionFS, target = "core")
+exp.rma_probe <- oligo::rma(affyExpressionFS, target = "probeset")
 
 # MA Plots after RMA
 oligo::MAplot(exp.rma)
@@ -56,9 +60,9 @@ oligo::MAplot(exp.rma)
 oligo::boxplot(exp.rma, names = sample_names)
 
 # Inspect distribution of data
-oligo::hist(exp.rma, transfo=identity)
+oligo::hist(exp.rma, transfo = identity)
 
-# Get NetAffx Biological Annotation and store it in the feature slot of the rma data
+# Get NetAffx Biological Annotation and store it in the feature slot
 featureData(exp.rma) <- getNetAffx(exp.rma, "transcript")
 featureData(exp.rma_probe) <- getNetAffx(exp.rma_probe, "probeset")
 
@@ -75,6 +79,7 @@ exp.probe <- exprs(exp.rma_probe)
 batch <- c(rep(1, 6), rep(2, 6))  # For plate number
 batch_info <- c()
 batch_date <- c()
+
 # For sample processing date
 for (cel in celFiles) {
   binfo <- readCelHeader(cel)$datheader
@@ -90,7 +95,9 @@ for (i in 1:length(unique(batch_date))) {
 
 # Guided PCA to detect batch
 batch_out <- gPCA::gPCA.batchdetect(x = t(exp.trans), batch, scaleY = T)
-batch_out_date <- gPCA::gPCA.batchdetect(x = t(exp.trans), as.integer(batch_date_ready), scaleY = T)
+batch_out_date <- gPCA::gPCA.batchdetect(x = t(exp.trans),
+                                         as.integer(batch_date_ready),
+                                         scaleY = T)
 
 print('Does Batch Have a significant effect: Plate')
 batch_out$delta  # [1] 0.2197712
@@ -130,9 +137,12 @@ Gene <- Gene[order(Gene[, 1]), ]
 Gene <- cbind(Gene[, 1], rownames(Gene), Gene[, 2:ncol(Gene)])
 
 # To map transcripts to gene, take the maxmean from WGCNA collapseRows function
-output_data <- WGCNA::collapseRows(TranscriptLevel, rowGroup = paste(mapped_transcripts),
+output_data <- WGCNA::collapseRows(TranscriptLevel,
+                                   rowGroup = paste(mapped_transcripts),
                                    rowID = names(mapped_transcripts))
 
 # Write validation set data
-write.table(output_data$datETcollapsed, 'data/validation/normalized/validation_set.tsv',
-            sep = "\t", row.names = T, col.names = NA)
+val_file = file.path('data', 'validation', 'normalized', 'validation_set.tsv')
+write.table(output_data$datETcollapsed, val_file, sep = "\t", row.names = T,
+            col.names = NA)
+dev.off()
