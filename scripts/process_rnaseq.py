@@ -31,7 +31,7 @@ def normalize_data(data, out_file, mad=False,
     :param data: pandas DataFrame genes as rows and sample IDs as columns
     :param out_file: the file name to write normalized matrix
     :param mad: boolean indicating if MAD genes should be output to file
-    :param mad_fh: the file name to write mad genes
+    :param mad_file: the file name to write mad genes
     :param method: the type of scaling to perform (defaults to minmax)
 
     Output:
