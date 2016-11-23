@@ -21,7 +21,7 @@ import argparse
 
 
 def normalize_data(data, out_file, mad=False,
-                   mad_fh=os.path.join('tables', 'full_mad_genes.tsv'),
+                   mad_file=os.path.join('tables', 'full_mad_genes.tsv'),
                    output=True,
                    method='minmax'):
     """
@@ -67,7 +67,7 @@ def normalize_data(data, out_file, mad=False,
         all_mad_genes = pd.Series(all_mad_genes,
                                   index=data_normalize.index.values)
         all_mad_genes = all_mad_genes.sort_values(ascending=False)
-        all_mad_genes.to_csv(mad_fh, sep='\t', header=False)
+        all_mad_genes.to_csv(mad_file, sep='\t', header=False)
 
 
 if __name__ == '__main__':
