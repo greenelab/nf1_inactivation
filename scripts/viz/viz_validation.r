@@ -17,6 +17,7 @@
 
 # Load libraries
 library(ggplot2)
+library(gridExtra)
 library(dplyr)
 library(calibrate)
 library(pwr)
@@ -27,6 +28,7 @@ args <- commandArgs(trailingOnly = T)
 print(args)
 validation_fh <- args[1]
 protein_fh <- args[2]
+figure_main <- paste0(args[3], '_main_figure.pdf')
 figure_box <- paste0(args[3], '_prediction_box.pdf')
 figure_scatter <- paste0(args[3], '_protein_scatter.pdf')
 figure_pred <- paste0(args[3], '_protein_box.pdf')
@@ -89,8 +91,8 @@ validation <- validation %>% rowwise() %>%
                                   'protein_rank'])
 
 # Plot Paddle Chart
-pdf(figure_box, height = 3, width = 4)
-ggplot(validation, aes(x = sample_id, y = weighted_auc, fill = protein)) +
+paddle_grob <- ggplot(validation, aes(x = sample_id, y = weighted_auc,
+                                      fill = protein)) +
   geom_violin(adjust = 0.8) +
   xlab('') + ylab('Weighted Prediction Scores') +
   geom_hline(yintercept = 0, linetype = "dashed", lwd = 0.5) +
@@ -105,18 +107,16 @@ ggplot(validation, aes(x = sample_id, y = weighted_auc, fill = protein)) +
         panel.grid.minor = element_line(color = 'white', size = 0.3),
         panel.background = element_rect(fill = 'white'),
         axis.line.x = element_blank(),
-        axis.line.y = element_line(color = 'black', size = 0.3),
+        axis.line.y = element_line(color = 'black', size = 0.5),
         axis.ticks = element_blank())
-dev.off()
 
 # Plot scatter plot
-pdf(figure_scatter, height = 3, width = 4)
-ggplot(plot_ready, aes(x = weight_auc, y = u87pi.norm, color = Plate,
-                       label = sample_id)) +
+scatter_grob <- ggplot(plot_ready, aes(x = weight_auc, y = u87pi.norm,
+                                       color = Plate, label = sample_id)) +
   xlab('Weighted Predictions (Mean)') +
   ylab('NF1 Protein Concentration') +
   geom_point(size = rel(0.8)) +
-  geom_text(color = 'black', vjust = -1.5, size = rel(1.4)) +
+  geom_text(color = 'black', hjust = 1.2, size = rel(2.2)) +
   scale_x_continuous(breaks = seq(-1, 1, by = 0.5), limits = c(-1, 1)) +
   theme(title = element_text(size = rel(2.2)),
         axis.title = element_text(size = rel(0.4)),
@@ -124,14 +124,13 @@ ggplot(plot_ready, aes(x = weight_auc, y = u87pi.norm, color = Plate,
         axis.text.y = element_text(size = rel(1)),
         axis.line.x = element_line(color = 'black', size = 0.5),
         axis.line.y = element_line(color = 'black', size = 0.5),
-        legend.title = element_text(size = rel(0.3)),
+        legend.title = element_text(size = rel(0.5)),
         legend.key = element_rect(fill = 'white'),
-        legend.text = element_text(size = rel(0.4)),
+        legend.text = element_text(size = rel(0.6)),
         legend.margin = unit(0.05, "cm"), 
         panel.grid.major = element_line(color = 'white', size = 0.3),
         panel.grid.minor = element_line(color = 'white', size = 0.3),
         panel.background = element_rect(fill = 'white'))
-dev.off()
 
 # Plot barchart for positive and negative predictions
 predict_nf1 <- vector(length = nrow(plot_ready))
@@ -152,8 +151,7 @@ predict_plot[predict_plot$sample_id == 'CB2', 'u87pi.norm'] <- cb2_mean
 
 # Set seed for geom_jitter()
 set.seed(1234)
-pdf(figure_pred, height = 3, width = 4)
-ggplot(predict_plot, aes(x = predict_nf1, y = u87pi.norm)) +
+box_plot_grob <- ggplot(predict_plot, aes(x = predict_nf1, y = u87pi.norm)) +
   geom_boxplot(aes(fill = predict_nf1), lwd = 0.2, outlier.colour = 'white') +
   xlab('') + ylab('NF1 Protein Concentration') +
   geom_jitter(width = 0.4, size = rel(0.8)) +
@@ -169,6 +167,13 @@ ggplot(predict_plot, aes(x = predict_nf1, y = u87pi.norm)) +
         axis.line.x = element_line(color = 'black', size = 0.5),
         axis.line.y = element_line(color = 'black', size = 0.5),
         axis.ticks.x = element_blank())
+
+# Arrage all grobs and save figure
+blankGrob <- ggplot() + geom_blank() + theme(panel.background = element_blank())
+layout <- matrix(c(1,2,3,4), nrow = 2, ncol = 2)
+pdf(figure_main, height = 5.5, width = 6.5)
+grid.arrange(blankGrob, paddle_grob, scatter_grob, box_plot_grob,
+             layout_matrix = layout)
 dev.off()
 
 # t-test for difference in protein between groups
@@ -192,11 +197,11 @@ n <- seq(2, 100)
 power <- sapply(n, function(x) pwr.t.test(d = effect_size, n = x,
                                           type = 'one.sample')$power)
 power_plot <- data.frame(cbind(n, power))
-pdf(figure_power, height = 3, width = 4)
+pdf(figure_power, height = 3, width = 3)
 ggplot(data = power_plot, aes(x = n, y = power)) + geom_line(lwd = 0.5) +
-  theme(axis.title = element_text(size = rel(0.6)),
-        axis.text.x = element_text(size = rel(0.6)),
-        axis.text.y = element_text(size = rel(0.6)),
+  theme(axis.title = element_text(size = rel(1.0)),
+        axis.text.x = element_text(size = rel(0.8)),
+        axis.text.y = element_text(size = rel(0.8)),
         legend.position = "none",
         panel.grid.major = element_line(color = 'white', size = 0.3),
         panel.grid.minor = element_line(color = 'white', size = 0.3),
