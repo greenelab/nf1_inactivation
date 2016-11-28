@@ -19,9 +19,9 @@ library(gridExtra)
 args <- commandArgs(trailingOnly = T)
 roc_fh <- args[1]
 roc_figure <- args[2]
-roc_results <- file.path('results',
+roc_results <- file.path("results",
                          paste0(tools::file_path_sans_ext(basename(args[2])),
-                                '_auroc.tsv'))
+                                "_auroc.tsv"))
 
 # Load Data
 roc_data <- readr::read_tsv(roc_fh)
@@ -38,11 +38,38 @@ range_auroc_high <- roc_summary %>% summarise(ci_high = quantile(avg, 0.95))
 
 auroc_results <- cbind(mean_auroc, range_auroc_low$ci_low,
                        range_auroc_high$ci_high)
-colnames(auroc_results) <- c('type', 'mean', '0.05 CI', '0.95 CI')
-write.table(auroc_results, roc_results, row.names = F, sep = '\t')
+colnames(auroc_results) <- c("type", "mean", "0.05 CI", "0.95 CI")
+write.table(auroc_results, roc_results, row.names = F, sep = "\t")
 
 # Create new variable that stores an ID for each unique iteration
-roc_data = roc_data %>% mutate(iteration = paste(seed, fold, sep = '_'))
+roc_data <- roc_data %>% mutate(iteration = paste(seed, fold, sep = "_"))
+
+# Aggregate mean false positive rates for each iteration
+roc_data_aggregate <- roc_data %>%
+  group_by(seed, fold, type, tpr) %>%
+  summarise(mean_fpr = mean(fpr)) %>%
+  group_by(seed, fold, type) %>%
+  mutate(full_group = paste(seed, fold, type, sep = "_"))
+
+# When ROC curve iterations are saved, they often lack a zero element
+# for both true positives and true negatives. Add the point (0, 0) when
+# this is the case.
+update_rows <- list()
+index <- 1
+for (group in unique(roc_data_aggregate$full_group)) {
+  subset_group <- roc_data_aggregate[roc_data_aggregate$full_group == group, ]
+  if (nrow(subset_group[subset_group$mean_fpr == 0 |
+                        subset_group$tpr == 0, ]) == 0) {
+    add_row <- subset_group[1, ]
+    add_row$tpr <- add_row$mean_fpr <- 0
+    update_rows[[index]] <- add_row
+    index <- index + 1
+  }
+}
+
+# Add (0, 0) points to the aggregate dataframe
+roc_data_aggregate <- dplyr::bind_rows(roc_data_aggregate,
+                                       do.call(rbind, update_rows))
 
 # Plot
 base_theme <- theme(panel.grid.major = element_blank(),
@@ -64,14 +91,17 @@ base_theme <- theme(panel.grid.major = element_blank(),
                     legend.text = element_text(size = rel(0.9)),
                     legend.title = element_blank())
 
-roc_grob <- ggplot(roc_data, aes(x = fpr, y = tpr, color = type, fill = type,
-                                 group = interaction(seed, fold, type))) +
-  labs(x = 'False Positive Rate', y = 'True Positive Rate') + 
-  geom_line(stat = "smooth", method = "loess", se = TRUE, alpha = 0.2) + 
-  geom_abline(intercept = 0, linetype = "dotted", lwd = rel(0.8)) +
+roc_grob <- ggplot(roc_data_aggregate, aes(x = mean_fpr, y = tpr,
+                                           color = type, fill = type,
+       group = interaction(seed, fold, type))) +
+  labs(x = "False Positive Rate", y = "True Positive Rate") +
+  geom_line(alpha = 0.3, size = 0.1) + geom_point(size = 0.3, alpha = 0.2) +
+  geom_abline(intercept = 0, linetype = "dashed", lwd = rel(0.8)) +
   scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
-                     limits = c(0, 1.1)) +
-  base_theme + theme(plot.margin = unit(c(0.5, 1, 0, 1), 'cm'))
+                     limits = c(0, 1.0)) +
+  scale_x_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
+                     limits = c(0, 1.0)) +
+  base_theme + theme(plot.margin = unit(c(0.1, 0, 0, 0), "cm"))
 
 # Summarize the AUROC for each iteration grouped by train/test
 roc_auc_data <- roc_data %>% group_by(iteration, type) %>%
@@ -79,20 +109,24 @@ roc_auc_data <- roc_data %>% group_by(iteration, type) %>%
 
 dens_cdf_grob <- ggplot(roc_auc_data, aes(x = auc_mean, colour = type,
                                           fill = type)) +
-  stat_ecdf(aes(ymin = 0, ymax = ..y..), geom = 'ribbon', alpha = 0.5) +
-  labs(x = 'AUROC', y = 'CDF') +
-  geom_vline(xintercept = 0.5, linetype = "dotted", lwd = rel(0.8)) +
-  base_theme + theme(plot.margin = unit(c(0, 1, 2, 1), 'cm'))
+  stat_ecdf(aes(ymin = 0, ymax = ..y..), geom = "ribbon", alpha = 0.5) +
+  labs(x = "AUROC", y = "CDF") +
+  geom_vline(xintercept = 0.5, linetype = "dashed", lwd = rel(0.8)) +
+  base_theme + theme(plot.margin = unit(c(0.8, 0, 0, 0), "cm"))
 
 # Extract the legend from the CDF plot
 gtable <- ggplot_gtable(ggplot_build(dens_cdf_grob))
-legend_grob <- which(sapply(gtable$grobs, function(x) x$name == 'guide-box'))
+legend_grob <- which(sapply(gtable$grobs, function(x) x$name == "guide-box"))
 legend_grob <- gtable$grobs[[legend_grob]]
 
-layout <- matrix(c(rep(1, 90), rep(2, 10)), nrow = 5, ncol = 20)
-pdf(roc_figure, height = 7, width = 7)
-grid.arrange(arrangeGrob(roc_grob + theme(legend.position = "none"),
-                         dens_cdf_grob + theme(legend.position = "none")), 
+layout <- matrix(nrow = 50, ncol = 50)
+layout[1:32, 1:42] <- 1
+layout[33:50, 1:42] <- 2
+layout[1:50, 43:50] <- 3
+
+pdf(roc_figure, height = 5, width = 4.5)
+grid.arrange(roc_grob + theme(legend.position = "none"),
+             dens_cdf_grob + theme(legend.position = "none"),
              layout_matrix = layout,
              legend_grob, nrow = 1)
 dev.off()
