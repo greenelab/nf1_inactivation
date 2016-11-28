@@ -71,6 +71,10 @@ for (group in unique(roc_data_aggregate$full_group)) {
 roc_data_aggregate <- dplyr::bind_rows(roc_data_aggregate,
                                        do.call(rbind, update_rows))
 
+# Take the mean of the aggregate by iteration
+roc_data_mean <- roc_data_aggregate %>% group_by(type, tpr) %>%
+  summarize(full_mean_fpr = mean(mean_fpr))
+
 # Plot
 base_theme <- theme(panel.grid.major = element_blank(),
                     panel.grid.minor = element_blank(),
@@ -91,16 +95,19 @@ base_theme <- theme(panel.grid.major = element_blank(),
                     legend.text = element_text(size = rel(0.9)),
                     legend.title = element_blank())
 
-roc_grob <- ggplot(roc_data_aggregate, aes(x = mean_fpr, y = tpr,
-                                           color = type, fill = type,
-       group = interaction(seed, fold, type))) +
+roc_grob <- ggplot(roc_data_mean, aes(x = full_mean_fpr, y = tpr,
+                                           color = type, fill = type)) +
   labs(x = "False Positive Rate", y = "True Positive Rate") +
-  geom_line(alpha = 0.3, size = 0.1) + geom_point(size = 0.3, alpha = 0.2) +
+  geom_line(size = rel(0.6)) + geom_point(size = rel(0.4)) +
   geom_abline(intercept = 0, linetype = "dashed", lwd = rel(0.8)) +
+  geom_line(data = roc_data_aggregate, inherit.aes = FALSE,
+            aes(x = mean_fpr, y = tpr, color = type, fill = type,
+                group = interaction(seed, fold, type)), 
+            alpha = 0.15, size = 0.1) +
   scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
-                     limits = c(0, 1.0)) +
+                     limits = c(0, 1)) +
   scale_x_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
-                     limits = c(0, 1.0)) +
+                     limits = c(0, 1)) +
   base_theme + theme(plot.margin = unit(c(0.1, 0, 0, 0), "cm"))
 
 # Summarize the AUROC for each iteration grouped by train/test
