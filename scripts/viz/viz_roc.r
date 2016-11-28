@@ -17,6 +17,7 @@ library(gridExtra)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
+args <- c('results/roc_tdm_output.tsv', 'figures/test_roc_agg_tdm.pdf')
 roc_fh <- args[1]
 roc_figure <- args[2]
 roc_results <- file.path("results",
@@ -103,7 +104,7 @@ roc_grob <- ggplot(roc_data_mean, aes(x = full_mean_fpr, y = tpr,
   geom_line(data = roc_data_aggregate, inherit.aes = FALSE,
             aes(x = mean_fpr, y = tpr, color = type, fill = type,
                 group = interaction(seed, fold, type)), 
-            alpha = 0.15, size = 0.1) +
+            alpha = 0.1, size = 0.1) +
   scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
                      limits = c(0, 1)) +
   scale_x_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
