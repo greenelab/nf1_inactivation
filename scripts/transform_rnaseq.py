@@ -7,52 +7,47 @@ Will transform training RNAseq data using TDM to coerce distributions to appear
 as microarray distributions
 
 Usage:
-The script is run by ANALYSIS.sh
+The script is run by run_pipeline.sh
 
     With required flags:
 
-    --microarray-fh    File handle for the reference microarray distribution
-    --rnaseq-fh        File handle for the target RNAseq data
-    --out-fh           File handle to write the TDM transformation file
-    --normalization    The normalization used to scale
+    --microarray_file    File location for the reference microarray data
+    --rnaseq_file        File location for the target RNAseq data
+    --tdm_out_file       File location to write the TDM transformation file
+    --normalization      The normalization used to scale
 
 The script will call an R script that outputs a training matched expression
-matrix that is overwritten by zero-one normalization.
+matrix that is overwritten by the given input normalization scheme.
 """
 
 import argparse
 from subprocess import call
 import pandas as pd
-from process_rnaseq import zero_one_normalize
+from process_rnaseq import normalize_data
 
-####################################
 # Load Command Arguments
-####################################
-parser = argparse.ArgumentParser()  # Load command line options
-parser.add_argument("-m", "--microarray-fh", dest="microarray_fh",
-                    help="file handle for microarray data")
-parser.add_argument("-r", "--rnaseq-fh", dest="rnaseq_fh",
-                    help="file handle for RNAseq data")
-parser.add_argument("-o", "--out-fh", dest="out_fh",
-                    help="file handle for normalized output file")
+parser = argparse.ArgumentParser()
+parser.add_argument("-m", "--microarray_file", dest="microarray_file",
+                    help="file name for microarray data")
+parser.add_argument("-r", "--rnaseq_file", dest="rnaseq_file",
+                    help="file name for RNAseq data")
+parser.add_argument("-o", "--tdm_out_file", dest="tdm_out_file",
+                    help="file name for normalized output file")
 parser.add_argument("-n", "--normalization", dest="normalization",
                     help="the normalization method")
 args = parser.parse_args()
 
-####################################
 # Load Constants
-####################################
-MICRO_FH = args.microarray_fh
-RNASEQ_FH = args.rnaseq_fh
-OUT_FH = args.out_fh
-NORMALIZATION = args.normalization
+micro_file = args.microarray_file
+rnaseq_file = args.rnaseq_file
+tdm_out_file = args.tdm_out_file
+normalization = args.normalization
 
-####################################
 # Analysis
-####################################
-command = 'R --no-save --args ' + MICRO_FH + ' ' + RNASEQ_FH + \
-          ' ' + OUT_FH + ' < ' + 'scripts/util/transform.r'
+command = 'R --no-save --args {} {} {} < \
+          scripts/util/transform.R'.format(micro_file, rnaseq_file,
+                                           tdm_out_file)
 call(command, shell=True)
 
-X = pd.read_csv(OUT_FH, delimiter='\t', index_col=0)
-zero_one_normalize(X, OUT_FH, method=NORMALIZATION)
+x_matrix_tdm = pd.read_csv(tdm_out_file, delimiter='\t', index_col=0)
+normalize_data(x_matrix_tdm, tdm_out_file, method=normalization)
