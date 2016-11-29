@@ -6,7 +6,7 @@
 #
 # Usage:
 # Run by transform_rnaseq.py within run_pipeline.sh to transform distribution.
-# The script is run with the following arguments.
+# The script is run with the following arguments:
 #
 #     R --no-save --args <microarray file> <RNAseq file> <output file>
 #
