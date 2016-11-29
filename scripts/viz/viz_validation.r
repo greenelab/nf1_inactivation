@@ -183,16 +183,26 @@ results <- t.test(x = nf1_inactive, y = nf1_wildtype, alternative = 'less')
 # Store results in table
 t_stat <- results$statistic
 p_val <- results$p.value
-effect_size <- cohensD(nf1_inactive, nf1_wildtype)
-required_n <- round(pwr.t.test(d = effect_size, power = 0.8 ,
-                               type = 'one.sample')$n)
-full_results <- cbind(t_stat, p_val, effect_size, required_n)
+effect_size <- cohensD(nf1_wildtype, nf1_inactive, method = 'unequal')
+
+# Power for unbalanced one-tailed t test where the sign of the effect size
+# indicates the direction of the effect
+power_t <- pwr.t2n.test(n1 = length(nf1_inactive), n2 = length(nf1_wildtype),
+                       d = -effect_size, sig.level = 0.05,
+                       alternative = "less")$power
+
+required_n <- round(pwr.t.test(d = -effect_size, power = 0.8,
+                               type = 'two.sample',
+                               alternative = 'less')$n)
+
+full_results <- cbind(t_stat, p_val, effect_size, power_t, required_n)
 write.table(full_results, table_stat, sep = ',', row.names = F)
 
 # Power analysis figure
 n <- seq(2, 100)
-power <- sapply(n, function(x) pwr.t.test(d = effect_size, n = x,
-                                          type = 'one.sample')$power)
+power <- sapply(n, function(x) pwr.t.test(d = -effect_size, n = x,
+                                          type = 'two.sample',
+                                          alternative = 'less')$power)
 power_plot <- data.frame(cbind(n, power))
 pdf(figure_power, height = 3, width = 3)
 ggplot(data = power_plot, aes(x = n, y = power)) + geom_line(lwd = 0.5) +
@@ -206,5 +216,6 @@ ggplot(data = power_plot, aes(x = n, y = power)) + geom_line(lwd = 0.5) +
         axis.line.x = element_line(color = 'black', size = 0.5),
         axis.line.y = element_line(color = 'black', size = 0.5)) +
   geom_hline(yintercept = 0.80, linetype = "dashed", lwd = 0.5, col = 'red') +
-  geom_vline(xintercept = 12, linetype = 'dashed', lwd = 0.5, col = 'blue')
+  geom_vline(xintercept = required_n, linetype = 'dashed', lwd = 0.5,
+             col = 'blue')
 dev.off()
