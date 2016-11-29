@@ -29,9 +29,6 @@ print(args)
 validation_fh <- args[1]
 protein_fh <- args[2]
 figure_main <- paste0(args[3], '_main_figure.pdf')
-figure_box <- paste0(args[3], '_prediction_box.pdf')
-figure_scatter <- paste0(args[3], '_protein_scatter.pdf')
-figure_pred <- paste0(args[3], '_protein_box.pdf')
 figure_power <- paste0(args[3], '_power_analysis.pdf')
 table_stat <- paste0(args[3], '_ttest_power_table.csv')
 
