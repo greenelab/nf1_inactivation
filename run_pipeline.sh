@@ -85,7 +85,7 @@ Rscript scripts/preprocess_validation.R
 python scripts/transform_rnaseq.py \
         --microarray_file 'data/validation/normalized/validation_set.tsv' \
         --rnaseq_file 'data/X/raw/GBM_RNAseq_X_matrix.tsv' \
-        --out_file 'data/X/tdm/GBM.tsv' \
+        --tdm_out_file 'data/X/tdm/GBM.tsv' \
         --normalization 'zscore'
 
 ##################
