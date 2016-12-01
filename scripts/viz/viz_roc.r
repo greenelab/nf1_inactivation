@@ -17,7 +17,6 @@ library(gridExtra)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
-args <- c('results/roc_tdm_output.tsv', 'figures/test_roc_agg_tdm.pdf')
 roc_fh <- args[1]
 roc_figure <- args[2]
 roc_results <- file.path("results",
@@ -52,26 +51,6 @@ roc_data_aggregate <- roc_data %>%
   group_by(seed, fold, type) %>%
   mutate(full_group = paste(seed, fold, type, sep = "_"))
 
-# When ROC curve iterations are saved, they often lack a zero element
-# for both true positives and true negatives. Add the point (0, 0) when
-# this is the case.
-update_rows <- list()
-index <- 1
-for (group in unique(roc_data_aggregate$full_group)) {
-  subset_group <- roc_data_aggregate[roc_data_aggregate$full_group == group, ]
-  if (nrow(subset_group[subset_group$mean_fpr == 0 |
-                        subset_group$tpr == 0, ]) == 0) {
-    add_row <- subset_group[1, ]
-    add_row$tpr <- add_row$mean_fpr <- 0
-    update_rows[[index]] <- add_row
-    index <- index + 1
-  }
-}
-
-# Add (0, 0) points to the aggregate dataframe
-roc_data_aggregate <- dplyr::bind_rows(roc_data_aggregate,
-                                       do.call(rbind, update_rows))
-
 # Take the mean of the aggregate by iteration
 roc_data_mean <- roc_data_aggregate %>% group_by(type, tpr) %>%
   summarize(full_mean_fpr = mean(mean_fpr))
@@ -101,7 +80,7 @@ roc_grob <- ggplot(roc_data_mean, aes(x = full_mean_fpr, y = tpr,
   labs(x = "False Positive Rate", y = "True Positive Rate") +
   geom_line(size = rel(0.6)) + geom_point(size = rel(0.4)) +
   geom_abline(intercept = 0, linetype = "dashed", lwd = rel(0.8)) +
-  geom_line(data = roc_data_aggregate, inherit.aes = FALSE,
+  geom_step(data = roc_data_aggregate, inherit.aes = FALSE,
             aes(x = mean_fpr, y = tpr, color = type, fill = type,
                 group = interaction(seed, fold, type)), 
             alpha = 0.1, size = 0.1) +
