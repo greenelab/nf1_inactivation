@@ -26,8 +26,8 @@ library(lsr)
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
 print(args)
-validation_fh <- args[1]
-protein_fh <- args[2]
+validation_file <- args[1]
+protein_file <- args[2]
 figure_main <- paste0(args[3], '_main_figure.pdf')
 figure_power <- paste0(args[3], '_power_analysis.pdf')
 table_stat <- paste0(args[3], '_ttest_power_table.csv')
@@ -35,8 +35,8 @@ table_stat <- paste0(args[3], '_ttest_power_table.csv')
 # Load Constants and Data
 qc_pass <- c('CB2', 'H5M', '3HQ', 'PBH', 'LNA', 'YXL', 'VVN', 'R7K',
              'RIW', 'TRM', 'UNY', 'W31')
-validation <- readr::read_tsv(validation_fh)
-protein <- read.csv(protein_fh, header = T, stringsAsFactors = F)
+validation <- readr::read_tsv(validation_file)
+protein <- read.csv(protein_file, header = T, stringsAsFactors = F)
 
 # Rename samples
 validation$sample_id <- apply(validation, 1, function(x) {substr(x[1], 4, 6)})
