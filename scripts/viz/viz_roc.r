@@ -17,14 +17,17 @@ library(gridExtra)
 
 # Load Command Args
 args <- commandArgs(trailingOnly = T)
-roc_fh <- args[1]
-roc_figure <- args[2]
+print(args)
+roc_file <- args[1]
+ensemble_roc_file <- args[2]
+roc_figure <- args[3]
 roc_results <- file.path("results",
                          paste0(tools::file_path_sans_ext(basename(args[2])),
                                 "_auroc.tsv"))
 
 # Load Data
-roc_data <- readr::read_tsv(roc_fh)
+roc_data <- readr::read_tsv(roc_file)
+roc_ensemble <- readr::read_tsv(ensemble_roc_file)
 
 # Save train/test AUROC results
 roc_summary <- roc_data %>%
@@ -75,8 +78,8 @@ base_theme <- theme(panel.grid.major = element_blank(),
                     legend.text = element_text(size = rel(0.9)),
                     legend.title = element_blank())
 
-roc_grob <- ggplot(roc_data_mean, aes(x = full_mean_fpr, y = tpr,
-                                           color = type, fill = type)) +
+roc_grob <- ggplot(roc_ensemble, aes(x = fpr, y = tpr,
+                                     color = type, fill = type)) +
   labs(x = "False Positive Rate", y = "True Positive Rate") +
   geom_line(size = rel(0.6)) + geom_point(size = rel(0.4)) +
   geom_abline(intercept = 0, linetype = "dashed", lwd = rel(0.8)) +
