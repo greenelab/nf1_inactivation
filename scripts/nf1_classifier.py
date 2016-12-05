@@ -174,6 +174,23 @@ def plot_decision_function(score_df, partition, output_file):
     plt.close()
 
 
+def interpolate_roc(df, by=0.01):
+    """
+    Interpolates true positive rates for a given set of false positive points.
+
+    Usage: pandas.DataFrame.apply(interpolate_roc) on roc output df
+
+    Arguments:
+    :param df: pandas DataFrame with fpr and tpr data
+    :param by: how many points to arrange by in np.arange()
+    """
+    x_post = np.arange(0, 1, by)
+    x_pre = [0.0] + list(df.fpr) + [1.0]
+    y_pre = [0.0] + list(df.tpr) + [1.0]
+    y_post = np.interp(x_post, xp=x_pre, fp=y_pre)
+    return pd.DataFrame.from_items([('fpr', x_post), ('tpr', y_post)])
+
+
 if __name__ == '__main__':
     # Load Command Arguments
     parser = argparse.ArgumentParser()
@@ -256,6 +273,9 @@ if __name__ == '__main__':
                                      '{}_{}_{}alpha_{}_l1ratio_{}_roc.pdf'
                                      .format(tissue, classifier, fig_base,
                                              str(c[0]), str(l[0])))
+        ensemble_roc = '{}_average_ensemble.tsv'.format(
+            os.path.splitext(out_file)[0])
+
         if effect_size:
             cohens_d = []
             tot_dec_s = pd.DataFrame(columns=['decision', 'status',
@@ -438,6 +458,21 @@ if __name__ == '__main__':
     # Write results to file
     if roc:
         roc_output.to_csv(out_file, sep='\t', index=False)
+
+        # Interpolate ROC curve and aggregate for average ROC
+        interpolated_df = roc_output.groupby(['fold', 'seed', 'type']) \
+                                    .apply(interpolate_roc) \
+                                    .reset_index() \
+                                    .drop('level_3', 1)
+        avg_df = interpolated_df.groupby(['type', 'fpr']).tpr.mean() \
+                                                             .reset_index()
+
+        zero_df = pd.DataFrame.from_items([('type', ['test', 'train'] * 2),
+                                           ('fpr', [0, 0, 1, 1]),
+                                           ('tpr', [0, 0, 1, 1])])
+        avg_df = avg_df.append(zero_df, ignore_index=True)
+        avg_df = avg_df.sort_values(['type', 'tpr']).reset_index(drop=True)
+        avg_df.to_csv(ensemble_roc, sep='\t', index=False)
     else:
         cv_accuracy = pd.DataFrame(cv_accuracy)
         if classifier == 'SVM':
@@ -459,8 +494,8 @@ if __name__ == '__main__':
 
     # Plot
     if roc:
-        command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
-                  ' < ' + 'scripts/viz/viz_roc.r'
+        command = 'R --no-save --args ' + out_file + ' ' + ensemble_roc + \
+                  ' ' + output_figure + ' < ' + 'scripts/viz/viz_roc.r'
     else:
         command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
                   ' ' + classifier + ' < ' + 'scripts/viz/viz_cv.r'
