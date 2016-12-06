@@ -47,17 +47,6 @@ write.table(auroc_results, roc_results, row.names = F, sep = "\t")
 # Create new variable that stores an ID for each unique iteration
 roc_data <- roc_data %>% mutate(iteration = paste(seed, fold, sep = "_"))
 
-# Aggregate mean false positive rates for each iteration
-roc_data_aggregate <- roc_data %>%
-  group_by(seed, fold, type, tpr) %>%
-  summarise(mean_fpr = mean(fpr)) %>%
-  group_by(seed, fold, type) %>%
-  mutate(full_group = paste(seed, fold, type, sep = "_"))
-
-# Take the mean of the aggregate by iteration
-roc_data_mean <- roc_data_aggregate %>% group_by(type, tpr) %>%
-  summarize(full_mean_fpr = mean(mean_fpr))
-
 # Plot
 base_theme <- theme(panel.grid.major = element_blank(),
                     panel.grid.minor = element_blank(),
@@ -81,10 +70,10 @@ base_theme <- theme(panel.grid.major = element_blank(),
 roc_grob <- ggplot(roc_ensemble, aes(x = fpr, y = tpr,
                                      color = type, fill = type)) +
   labs(x = "False Positive Rate", y = "True Positive Rate") +
-  geom_line(size = rel(0.6)) + geom_point(size = rel(0.4)) +
+  geom_line(size = rel(0.6)) +
   geom_abline(intercept = 0, linetype = "dashed", lwd = rel(0.8)) +
-  geom_step(data = roc_data_aggregate, inherit.aes = FALSE,
-            aes(x = mean_fpr, y = tpr, color = type, fill = type,
+  geom_step(data = roc_data, inherit.aes = FALSE,
+            aes(x = fpr, y = tpr, color = type, fill = type,
                 group = interaction(seed, fold, type)), 
             alpha = 0.1, size = 0.1) +
   scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1.00),
