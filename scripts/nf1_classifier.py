@@ -187,7 +187,7 @@ def interpolate_roc(df, by=0.01):
     x_post = np.arange(0, 1, by)
     x_pre = [0.0] + list(df.fpr) + [1.0]
     y_pre = [0.0] + list(df.tpr) + [1.0]
-    y_post = np.interp(x_post, xp=x_pre, fp=y_pre)
+    y_post = np.interp(x_post, xp=x_pre, fp=y_pre, left=0, right=1)
     return pd.DataFrame.from_items([('fpr', x_post), ('tpr', y_post)])
 
 
