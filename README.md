@@ -57,8 +57,9 @@ Please direct all other correspondence to: `csgreene@mail.med.upenn.edu` or
 
 ## Data
 
-* All data is publicly available. TCGA data used to train the classifier was
-retrieved from
+All data is publicly available.
+
+* TCGA data used to train the classifier was retrieved from
 [UCSC Xena](https://genome-cancer.soe.ucsc.edu/proj/site/xena/datapages/).
 * All of our validation data was deposited in
 [GEO](http://www.ncbi.nlm.nih.gov/geo/).
