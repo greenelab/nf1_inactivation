@@ -174,6 +174,23 @@ def plot_decision_function(score_df, partition, output_file):
     plt.close()
 
 
+def interpolate_roc(df, by=0.01):
+    """
+    Interpolates true positive rates for a given set of false positive points.
+
+    Usage: pandas.DataFrame.apply(interpolate_roc) on roc output df
+
+    Arguments:
+    :param df: pandas DataFrame with fpr and tpr data
+    :param by: how many points to arrange by in np.arange()
+    """
+    x_post = np.arange(0, 1, by)
+    x_pre = [0.0] + list(df.fpr) + [1.0]
+    y_pre = [0.0] + list(df.tpr) + [1.0]
+    y_post = np.interp(x_post, xp=x_pre, fp=y_pre, left=0, right=1)
+    return pd.DataFrame.from_items([('fpr', x_post), ('tpr', y_post)])
+
+
 if __name__ == '__main__':
     # Load Command Arguments
     parser = argparse.ArgumentParser()
@@ -253,18 +270,26 @@ if __name__ == '__main__':
 
     if roc:
         output_figure = os.path.join('figures',
-                                     '{}_{}_{}alpha_{}_l1ratio_{}_roc.png'
+                                     '{}_{}_{}alpha_{}_l1ratio_{}_roc.pdf'
                                      .format(tissue, classifier, fig_base,
                                              str(c[0]), str(l[0])))
+        ensemble_roc = '{}_average_ensemble.tsv'.format(
+            os.path.splitext(out_file)[0])
+
         if effect_size:
             cohens_d = []
             tot_dec_s = pd.DataFrame(columns=['decision', 'status',
                                               'partition'])
             decision_plot_train = os.path.join('figures',
-                                               'decision_plot_train.pdf')
+                                               '{}_decision_plot_train.pdf'
+                                               .format(fig_base))
             decision_plot_test = os.path.join('figures',
-                                              'decision_plot_test.pdf')
-            cohen_plot = os.path.join('figures', 'cohens_effect_size_plot.pdf')
+                                              '{}_decision_plot_test.pdf'
+                                              .format(fig_base))
+            cohen_plot = os.path.join('figures',
+                                      '{}_cohens_d_plot.pdf'.format(fig_base))
+            cohen_file = os.path.join('results',
+                                      '{}_cohens_d.tsv'.format(fig_base))
     else:
         output_figure = os.path.join('figures',
                                      '{}_{}_{}_cv.png'.format(tissue,
@@ -361,8 +386,10 @@ if __name__ == '__main__':
                             y_score = clf.decision_function(x_test)
                             y_score_train = clf.decision_function(x_train)
 
-                            fpr, tpr, _ = roc_curve(y_test, y_score)
-                            fpr_t, tpr_t, _ = roc_curve(y_train, y_score_train)
+                            fpr, tpr, _ = roc_curve(y_test, y_score,
+                                                    drop_intermediate=False)
+                            fpr_, tpr_, _ = roc_curve(y_train, y_score_train,
+                                                      drop_intermediate=False)
 
                             test_auc = roc_auc_score(y_test, y_score,
                                                      average='weighted')
@@ -373,13 +400,15 @@ if __name__ == '__main__':
                                                      [test_auc] * len(tpr),
                                                      ['test'] * len(tpr)],
                                                      index=col_names).T
-                            temp_train = pd.DataFrame([tpr_t, fpr_t,
-                                                      [train_auc] * len(tpr_t),
-                                                      ['train'] * len(tpr_t)],
+                            temp_train = pd.DataFrame([tpr_, fpr_,
+                                                      [train_auc] * len(tpr_),
+                                                      ['train'] * len(tpr_)],
                                                       index=col_names).T
 
                             full = temp_test.append(temp_train,
                                                     ignore_index=True)
+                            full = full.assign(seed=seed)
+                            full = full.assign(fold=fold)
                             roc_output = roc_output.append(full,
                                                            ignore_index=True)
                             if get_coef:
@@ -429,6 +458,21 @@ if __name__ == '__main__':
     # Write results to file
     if roc:
         roc_output.to_csv(out_file, sep='\t', index=False)
+
+        # Interpolate ROC curve and aggregate for average ROC
+        interpolated_df = roc_output.groupby(['fold', 'seed', 'type']) \
+                                    .apply(interpolate_roc) \
+                                    .reset_index() \
+                                    .drop('level_3', 1)
+        avg_df = interpolated_df.groupby(['type', 'fpr']).tpr.mean() \
+                                                             .reset_index()
+
+        zero_df = pd.DataFrame.from_items([('type', ['test', 'train'] * 2),
+                                           ('fpr', [0, 0, 1, 1]),
+                                           ('tpr', [0, 0, 1, 1])])
+        avg_df = avg_df.append(zero_df, ignore_index=True)
+        avg_df = avg_df.sort_values(['type', 'tpr']).reset_index(drop=True)
+        avg_df.to_csv(ensemble_roc, sep='\t', index=False)
     else:
         cv_accuracy = pd.DataFrame(cv_accuracy)
         if classifier == 'SVM':
@@ -450,8 +494,8 @@ if __name__ == '__main__':
 
     # Plot
     if roc:
-        command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
-                  ' < ' + 'scripts/viz/viz_roc.r'
+        command = 'R --no-save --args ' + out_file + ' ' + ensemble_roc + \
+                  ' ' + output_figure + ' < ' + 'scripts/viz/viz_roc.r'
     else:
         command = 'R --no-save --args ' + out_file + ' ' + output_figure + \
                   ' ' + classifier + ' < ' + 'scripts/viz/viz_cv.r'
@@ -475,3 +519,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.savefig(cohen_plot)
         plt.close()
+
+        # Save Cohen's D effect size estimates
+        cohens_df.to_csv(cohen_file, sep='\t', index=False)
