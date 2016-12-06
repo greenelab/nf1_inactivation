@@ -61,8 +61,8 @@ All data is publicly available.
 
 * TCGA data used to train the classifier was retrieved from
 [UCSC Xena](https://genome-cancer.soe.ucsc.edu/proj/site/xena/datapages/).
-* All of our validation data was deposited in
-[GEO](http://www.ncbi.nlm.nih.gov/geo/).
+* Our gene expression validation data was deposited under accession
+[GSE85033](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE85033).
 
 ## Acknowledgements
 
