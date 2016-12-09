@@ -53,7 +53,7 @@ python scripts/nf1_classifier.py \
         --hyperparameters $alpha_param \
         --alt_params $l1_ratio \
         --iterations 50 \
-        --y_origin_fh 'data/Y/'
+        --y_origin_file 'data/Y/'
 
 ##################
 # Step 3 - Inspect Model
@@ -68,7 +68,7 @@ python scripts/nf1_classifier.py \
         --tissue 'GBM' \
         --classifier 'elasticnet' \
         --output_file 'results/roc_output.tsv' \
-        --iterations 50 \
+        --iterations 100 \
         --hyperparameters $optimal_alpha \
         --alt_params $optimal_l1 \
         --y_origin_file 'data/Y/' \
@@ -95,14 +95,14 @@ python scripts/transform_rnaseq.py \
 python scripts/nf1_classifier.py \
         --gene 'NF1' \
         --tissue 'GBM' \
-        --output-file 'results/gbm_elasticnet_unlabeled_tdm_cv.tsv' \
+        --output_file 'results/gbm_elasticnet_unlabeled_tdm_cv.tsv' \
         --classifier 'elasticnet' \
         --hyperparameters $alpha_param \
-        --alt-params $l1_ratio \
+        --alt_params $l1_ratio \
         --iterations 50 \
-        --y-origin-fh 'data/Y/' \
-        --x-origin-fh 'data/X/tdm/raw_norm_' \
-        --validation-sub
+        --y_origin_file 'data/Y/' \
+        --x_origin_file 'data/X/tdm/' \
+        --validation_sub
 
 # TDM transformed optimal parameters
 optimal_alpha_tdm=0.15
@@ -113,22 +113,22 @@ python scripts/nf1_classifier.py \
         --gene 'NF1' \
         --tissue 'GBM' \
         --classifier 'elasticnet' \
-        --output-file 'results/roc_tdm_output.tsv' \
+        --output_file 'results/roc_tdm_output.tsv' \
         --iterations 100 \
         --hyperparameters $optimal_alpha_tdm \
-        --alt-params $optimal_l1_tdm \
-        --y-origin-fh 'data/Y/' \
-        --x-origin-fh 'data/X/tdm/raw_norm_' \
-        --plot-roc \
-        --coef-weights
+        --alt_params $optimal_l1_tdm \
+        --y_origin_file 'data/Y/' \
+        --x_origin_file 'data/X/tdm/' \
+        --plot_roc \
+        --coef_weights
 
 # Apply classifier to validation data
 python scripts/validation.py \
-        --validation-fh 'data/validation/normalized/validation_set.tsv' \
-        --x-matrix 'data/X/tdm/raw_norm_GBM.tsv' \
-        --out-fh 'results/validation_results.tsv' \
+        --validation_file 'data/validation/normalized/validation_set.tsv' \
+        --x_matrix 'data/X/tdm/GBM.tsv' \
+        --out_file 'results/validation_results.tsv' \
         --hyperparameters $optimal_alpha_tdm \
-        --alt-params $optimal_l1_tdm \
+        --alt_params $optimal_l1_tdm \
         --ensemble 100
 
 
