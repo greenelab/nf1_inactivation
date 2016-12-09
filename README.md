@@ -67,6 +67,6 @@ All data is publicly available.
 ## Acknowledgements
 
 This work was supported by the Genomics and Computational Biology graduate group
-at The Unversity of Pennsylvania (G.P.W); the Gordon and Betty Moore
+at The University of Pennsylvania (G.P.W); the Gordon and Betty Moore
 Foundation’s Data-Driven Discovery Initiative (grant number GBMF 4552 to
 C.S.G.); and the American Cancer Society (grant number IRG 8200327 to C.S.G.).
