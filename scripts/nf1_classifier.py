@@ -489,7 +489,7 @@ if __name__ == '__main__':
         sorted_weight.to_csv(weight_file, index=True, sep='\t')
 
         command = 'R --no-save --args ' + weight_file + ' ' + \
-                  'figures/weight_genes.png < scripts/viz/viz_geneweights.r'
+                  'figures/weight_genes.pdf < scripts/viz/viz_geneweights.r'
         call(command, shell=True)
 
     # Plot
